@@ -28,6 +28,18 @@ Two findings from round 1 were not fully closed; one new key-management issue. A
 
 Result: typecheck clean, 46 tests green, E2E confirms `out/` carries no private key and `vault/` is `0600`.
 
+## Round 3 (Codex re-review, 07-31)
+
+| # | Severity | Finding | Resolution |
+|---|---|---|---|
+| 1 | Critical | `label()` still allowed short arbitrary strings (Base64/PII) as public values; `capsule.version` unbounded | `capsule.version` bounded to 1–8 digits; label max tightened to 48. **Scope decision:** shape validation cannot distinguish a short Base64 secret from a legitimate slug (both alphanumeric), so the secret-free *guarantee* is scoped to customer/execution-derived data (dropped/redacted/scanned); maker-authored labels are bounded + reviewed (NFR-04), like a résumé's free fields. An optional `allow` enum on `label()` enforces a closed vocabulary where a deployment has one. |
+| 2 | Critical | Duplicate JSON key could inject a secret into signed raw bytes that a re-parse hides | Wire format pinned to canonical JSON: `build` writes `canonicalize(receipt)`; `verifyReceipt` requires `rawJson === canonicalize(receipt)` (`canonicalWire`). Any dup key / extra field / reorder / whitespace is rejected regardless of the scanner. |
+| 3 | Medium | `vault/` 0700/0600 not enforced on pre-existing paths | CLI `chmod`s the vault dir and each secret file every run, and rejects symlinks. E2E: a loosened `755/644` vault is re-hardened to `700/600`; a symlinked key is refused. |
+
+Result: typecheck clean, 49 tests green, E2E confirms canonical wire + perm re-hardening + symlink rejection.
+
+On #1 specifically: this is the deliberate boundary of the guarantee, not an open regex war. "No customer/execution secret leaks" is provable and enforced; "a maker cannot write their own secret into their own public label" is not something any credential system proves — it is handled by the pre-publish review and, where a closed vocabulary exists, the `allow` enum.
+
 ## Residual known limitations (not blocking Phase 0)
 
 - **Scanner is best-effort.** It does not detect Base64/high-entropy secrets, personal names, or postal addresses. Mitigation is structural: structural fields are validated to a shape, free-text labels are bounded, and the builder fails closed. Event `summary` remains maker-authored free text (redacted, reviewed before publish per NFR-04) — it is the one field where the maker is trusted not to embed their own secrets.

@@ -31,6 +31,8 @@ export interface VerificationResult {
   /** Recomputed checks that disagree with either claimed array. */
   checkMismatches: CheckMismatch[];
   privacyClean: boolean;
+  /** Raw wire bytes are exactly the canonical form — no dup keys / extra fields / reordering. */
+  canonicalWire: boolean;
   ok: boolean;
 }
 
@@ -67,15 +69,27 @@ export function verifyReceipt(
     ...diffChecks(fresh.checks, receipt.metrics.machineRecomputed, "metrics.machineRecomputed"),
   ];
 
-  // 4. Privacy gate: no secret anywhere in the canonical form, nor in the raw
+  // 4. Wire format is pinned to canonical JSON. Any duplicate key, extra field,
+  //    reordering, or whitespace makes the raw bytes differ from canonical and
+  //    is rejected — this closes secret injection that a re-parse would hide
+  //    (JSON.parse keeps only the last duplicate key) and that the scanner's
+  //    false negatives would otherwise let through.
+  const canonicalWire = opts.rawJson === undefined || opts.rawJson.trim() === canonicalize(receipt);
+
+  // 5. Privacy gate: no secret anywhere in the canonical form, nor in the raw
   //    bytes as received (a `__proto__`-style injection hides from the parse).
   const privacyClean =
     scan(canonicalize(receipt)).length === 0 &&
     (opts.rawJson === undefined || scan(opts.rawJson).length === 0);
 
   const ok =
-    signatureValid && issuerTrusted && artifactMatch && checkMismatches.length === 0 && privacyClean;
-  return { signatureValid, issuerTrusted, artifactMatch, checkMismatches, privacyClean, ok };
+    signatureValid &&
+    issuerTrusted &&
+    artifactMatch &&
+    checkMismatches.length === 0 &&
+    canonicalWire &&
+    privacyClean;
+  return { signatureValid, issuerTrusted, artifactMatch, checkMismatches, privacyClean, canonicalWire, ok };
 }
 
 /**

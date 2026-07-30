@@ -139,7 +139,7 @@ describe("round 2 hardening", () => {
     expect(() => buildReceipt(bad, { keyPair })).toThrow(/too long|category/);
   });
 
-  // finding #2: padded/duplicate machine metrics are caught
+  // finding #2 (round 2): padded/duplicate machine metrics are caught
   it("catches duplicate/padded machine metrics even when a correct row is present", () => {
     const t = structuredClone(built.receipt);
     const h1 = t.metrics.machineRecomputed.find((m) => m.name === "h1_count")!;
@@ -149,5 +149,33 @@ describe("round 2 hardening", () => {
     const v = verifyReceipt(forged, ART, { trustedIssuer: ISSUER });
     expect(v.checkMismatches.length).toBeGreaterThan(0);
     expect(v.ok).toBe(false);
+  });
+});
+
+describe("round 3 hardening", () => {
+  // finding #2 (round 3): wire format pinned to canonical JSON
+  it("accepts the exact canonical wire bytes", () => {
+    const canonical = canonicalize(built.receipt);
+    const v = verifyReceipt(JSON.parse(canonical) as Receipt, ART, { trustedIssuer: ISSUER, rawJson: canonical });
+    expect(v.canonicalWire).toBe(true);
+    expect(v.ok).toBe(true);
+  });
+
+  it("rejects a duplicate-key injection that a re-parse would hide", () => {
+    // prepend a duplicate `capsule` carrying a Base64 secret; JSON.parse keeps
+    // the later (legit) one, so signature stays valid — canonical wire must reject.
+    const canonical = canonicalize(built.receipt);
+    const injected = `{"capsule":{"id":"c2stcHjvai","version":"1"},` + canonical.slice(1);
+    const parsed = JSON.parse(injected) as Receipt;
+    const v = verifyReceipt(parsed, ART, { trustedIssuer: ISSUER, rawJson: injected });
+    expect(v.signatureValid).toBe(true); // parsed value is the legit capsule
+    expect(v.canonicalWire).toBe(false); // raw bytes are not canonical
+    expect(v.ok).toBe(false);
+    expect(injected).toContain("c2stcHjvai"); // the secret really is in the raw bytes
+  });
+
+  // finding #1 (round 3): capsule.version is bounded
+  it("rejects an over-long capsule.version", () => {
+    expect(() => buildReceipt(raw, { keyPair, capsule: { id: "ok-id", version: "123456789012345678" } })).toThrow(/version/);
   });
 });
