@@ -1,0 +1,7 @@
+node_modules/
+out/
+*.log
+.DS_Store
+# never commit device-local secrets / raw traces
+*.local.json
+vault/

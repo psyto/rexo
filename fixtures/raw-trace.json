@@ -1,0 +1,31 @@
+{
+  "job": { "id": "job-sakura-lp", "category": "restaurant-lp", "domain": "web" },
+  "events": [
+    {
+      "kind": "llm_call",
+      "tool": "claude-opus",
+      "rawText": "System key sk-proj-ABCD1234abcd5678EFGH9012ijkl. さくら食堂のLPを作成。オーナー連絡先 owner@sakura-diner.example / 03-1234-5678。ブランドカラーは赤系。",
+      "costUsd": 0.42,
+      "durationMs": 120000
+    },
+    {
+      "kind": "tool_call",
+      "tool": "web-deploy",
+      "rawText": "deploy with AWS AKIAABCDEFGHIJKLMNOP to staging bucket",
+      "costUsd": 0.01,
+      "durationMs": 30000
+    },
+    { "kind": "edit", "summary": "hero コピーを3案作って一番刺さるものへ差し替え", "durationMs": 300000 },
+    { "kind": "edit", "summary": "CTA ボタンをファーストビュー内に移動", "durationMs": 180000 },
+    { "kind": "eval", "tool": "lighthouse", "summary": "パフォーマンスとアクセシビリティを測定", "durationMs": 60000 }
+  ],
+  "inputs": [
+    { "kind": "brief", "rawText": "クライアント: さくら食堂。連絡先 owner@sakura-diner.example、電話 03-1234-5678。競合はチェーン定食店。" },
+    { "kind": "brand-assets", "rawText": "ロゴ画像とメニュー写真一式（社外秘）" }
+  ],
+  "artifactPath": "fixtures/artifact/index.html",
+  "attestedMetrics": [
+    { "name": "CVR", "value": 4.8, "unit": "%", "attestation": "client-sig:0xsakura-owner" }
+  ],
+  "revisions": 3
+}
