@@ -5,3 +5,6 @@ out/
 # never commit device-local secrets / raw traces
 *.local.json
 vault/
+# a maker's real filled-in job + delivered artifact may contain client secrets
+fixtures/your-job.json
+fixtures/your-artifact/

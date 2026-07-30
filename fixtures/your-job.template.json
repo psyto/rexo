@@ -1,0 +1,43 @@
+{
+  "job": {
+    "id": "my-first-lp",
+    "category": "restaurant-lp",
+    "domain": "web"
+  },
+  "events": [
+    {
+      "kind": "llm_call",
+      "tool": "claude-opus",
+      "rawText": "PASTE the actual prompt / context you used. Secrets, client names, keys are fine here — this stays in vault/ and is redacted before anything is published.",
+      "costUsd": 0,
+      "durationMs": 0
+    },
+    {
+      "kind": "tool_call",
+      "tool": "web-deploy",
+      "rawText": "PASTE raw tool input/output if any (also device-local).",
+      "costUsd": 0,
+      "durationMs": 0
+    },
+    {
+      "kind": "edit",
+      "summary": "PUBLIC one-line description of a revision — no secrets (e.g. hero コピーを3案作って差し替え)",
+      "durationMs": 0
+    },
+    {
+      "kind": "eval",
+      "tool": "lighthouse",
+      "summary": "what you measured (public)",
+      "durationMs": 0
+    }
+  ],
+  "inputs": [
+    { "kind": "brief", "rawText": "PASTE the client brief (device-local, redacted)." },
+    { "kind": "brand-assets", "rawText": "notes about assets (device-local)." }
+  ],
+  "artifactPath": "fixtures/your-artifact/index.html",
+  "attestedMetrics": [
+    { "name": "CVR", "value": 0, "unit": "%", "attestation": "client-sig:optional-ref" }
+  ],
+  "revisions": 0
+}

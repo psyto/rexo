@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build:receipt": "tsx src/cli.ts build",
+    "preview": "tsx src/cli.ts build --local-preview",
     "verify:receipt": "tsx src/cli.ts verify",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
