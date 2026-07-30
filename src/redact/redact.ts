@@ -1,5 +1,6 @@
 import type { RawTrace, PublishedEvent, Finding } from "../types.js";
 import { scan, redactString } from "./scanner.js";
+import { assertKind, label } from "../publish-guard.js";
 
 export interface RedactionResult {
   published: PublishedEvent[];
@@ -21,6 +22,7 @@ export function redactTrace(raw: RawTrace): RedactionResult {
   const published: PublishedEvent[] = [];
 
   raw.events.forEach((ev, i) => {
+    assertKind(ev.kind, `events[${i}]`); // reject arbitrary strings in a structural field
     if (ev.rawText) {
       for (const m of scan(ev.rawText)) {
         findings.push({ type: m.type, location: `events[${i}].rawText` });
@@ -31,14 +33,14 @@ export function redactTrace(raw: RawTrace): RedactionResult {
     for (const t of types) findings.push({ type: t, location: `events[${i}].summary` });
     published.push({
       kind: ev.kind,
-      ...(ev.tool ? { tool: redactString(ev.tool).redacted } : {}),
+      ...(ev.tool ? { tool: label(ev.tool, `events[${i}].tool`) } : {}),
       redactedSummary: redacted,
     });
   });
 
   const inputKinds: string[] = [];
   (raw.inputs ?? []).forEach((inp, i) => {
-    inputKinds.push(redactString(inp.kind).redacted);
+    inputKinds.push(label(inp.kind, `inputs[${i}].kind`));
     if (inp.rawText) {
       for (const m of scan(inp.rawText)) {
         findings.push({ type: m.type, location: `inputs[${i}].rawText` });

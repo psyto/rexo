@@ -2,8 +2,11 @@ import type { RawTrace, Receipt, CostBand, DurationBand, Finding, AttestedMetric
 import { redactTrace } from "../redact/redact.js";
 import { recomputeArtifact } from "../verify/recompute.js";
 import { canonicalize } from "../canonical.js";
-import { scan, redactString } from "../redact/scanner.js";
+import { scan } from "../redact/scanner.js";
+import { PrivacyGateError, assertIssuedAt, assertCapsule, label } from "../publish-guard.js";
 import { sha256hex, randomSalt, signMessage, generateVerifierKey, type KeyPair } from "../crypto.js";
+
+export { PrivacyGateError } from "../publish-guard.js";
 
 export interface BuildOptions {
   keyPair?: KeyPair;
@@ -21,28 +24,21 @@ export interface BuildResult {
   findings: Finding[];
 }
 
-/** A residual secret survived redaction into a field that would be published. */
-export class PrivacyGateError extends Error {
-  constructor(readonly leakTypes: string[]) {
-    super(`refusing to build receipt: residual secret(s) detected: ${leakTypes.join(", ")}`);
-    this.name = "PrivacyGateError";
-  }
-}
-
-const red = (s: string): string => redactString(s).redacted;
-
 export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResult {
   const keyPair = opts.keyPair ?? generateVerifierKey();
   const salt = opts.salt ?? randomSalt();
   const issuedAt = opts.issuedAt ?? new Date().toISOString();
+  assertIssuedAt(issuedAt);
 
+  // redactTrace validates event kinds (enum) and bounds tool/input labels.
   const { published, inputKinds, findings } = redactTrace(raw);
   const artifact = recomputeArtifact(raw.artifactPath);
 
-  // Every external-origin string that lands in the receipt is redacted — not
-  // just event summaries. The scanner is best-effort; the final gate below is
-  // what actually guarantees no secret ships.
-  const toolsUsed = dedupe(raw.events.flatMap((e) => (e.tool ? [red(e.tool)] : [])));
+  const capsule = opts.capsule ?? { id: label(raw.job.id, "job.id"), version: "1" };
+  assertCapsule(capsule);
+
+  // Free-text public labels are redacted AND bounded (see publish-guard).
+  const toolsUsed = dedupe(raw.events.flatMap((e) => (e.tool ? [label(e.tool, "event.tool")] : [])));
   const revisions = raw.revisions ?? raw.events.filter((e) => e.kind === "edit").length;
   const costBand = toCostBand(sum(raw.events.map((e) => e.costUsd ?? 0)));
   const durationBand = toDurationBand(sum(raw.events.map((e) => e.durationMs ?? 0)));
@@ -50,8 +46,8 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
   const clientAttested = (raw.attestedMetrics ?? []).map((m) => redactAttested(m));
 
   const conditions = {
-    category: red(raw.job.category),
-    ...(raw.job.domain ? { domain: red(raw.job.domain) } : {}),
+    category: label(raw.job.category, "job.category"),
+    ...(raw.job.domain ? { domain: label(raw.job.domain, "job.domain") } : {}),
     inputKinds,
   };
 
@@ -62,7 +58,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
   const unsigned: Omit<Receipt, "signature"> = {
     schema: "ccap.receipt/v0",
-    capsule: opts.capsule ?? { id: red(raw.job.id), version: "1" },
+    capsule,
     conditions,
     toolsUsed,
     execution: { revisions, costBand, durationBand },
@@ -89,10 +85,10 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
 function redactAttested(m: AttestedMetric): AttestedMetric & { source: "client-attested"; trust: "low" } {
   return {
-    name: red(m.name),
-    value: typeof m.value === "string" ? red(m.value) : m.value,
-    ...(m.unit ? { unit: red(m.unit) } : {}),
-    ...(m.attestation ? { attestation: red(m.attestation) } : {}),
+    name: label(m.name, "attested.name"),
+    value: typeof m.value === "string" ? label(m.value, "attested.value") : m.value,
+    ...(m.unit ? { unit: label(m.unit, "attested.unit") } : {}),
+    ...(m.attestation ? { attestation: label(m.attestation, "attested.attestation") } : {}),
     source: "client-attested",
     trust: "low",
   };

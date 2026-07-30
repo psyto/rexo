@@ -78,23 +78,39 @@ export function verifyReceipt(
   return { signatureValid, issuerTrusted, artifactMatch, checkMismatches, privacyClean, ok };
 }
 
-/** Full equality of a claimed check array against the freshly recomputed one. */
+/**
+ * Full equality of a claimed check array against the freshly recomputed one.
+ * Strict: duplicate names and length mismatches are failures too — otherwise a
+ * signer could pad the displayed array with extra rows (a correct value plus a
+ * forged one) and slip past a name→value map that keeps only the last entry.
+ */
 function diffChecks(
   fresh: MachineMetric[],
   claimed: MachineMetric[],
   field: CheckMismatch["field"],
 ): CheckMismatch[] {
   const out: CheckMismatch[] = [];
+
+  // Duplicate names in the claimed array are rejected outright.
+  const counts = new Map<string, number>();
+  for (const c of claimed) counts.set(c.name, (counts.get(c.name) ?? 0) + 1);
+  for (const [name, n] of counts) {
+    if (n > 1) out.push({ field, name, claimed: `duplicate ×${n}`, recomputed: null });
+  }
+
+  // Array length must match the recomputed set exactly.
+  if (claimed.length !== fresh.length) {
+    out.push({ field, name: "(count)", claimed: claimed.length, recomputed: fresh.length });
+  }
+
   const claimedByName = new Map(claimed.map((c) => [c.name, c]));
   const freshNames = new Set(fresh.map((c) => c.name));
-
   for (const f of fresh) {
     const c = claimedByName.get(f.name);
     if (!c || !sameMetric(f, c)) {
       out.push({ field, name: f.name, claimed: c ?? null, recomputed: f });
     }
   }
-  // Extra claimed metrics with no recomputed counterpart are also failures.
   for (const c of claimed) {
     if (!freshNames.has(c.name)) {
       out.push({ field, name: c.name, claimed: c, recomputed: null });

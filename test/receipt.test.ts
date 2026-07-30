@@ -119,3 +119,35 @@ describe("receipt build + verify", () => {
     expect(v.ok).toBe(false);
   });
 });
+
+describe("round 2 hardening", () => {
+  // finding #1: structural public fields are validated, not scanner-trusted
+  it("rejects a caller-supplied capsule id that is not a slug (e.g. mixed-case Base64)", () => {
+    expect(() => buildReceipt(raw, { keyPair, capsule: { id: "c2stcHJvai1BQkNEMTIzNA", version: "1" } })).toThrow(/capsule\.id/);
+  });
+  it("rejects an arbitrary (non-enum) event kind", () => {
+    const bad = structuredClone(raw);
+    (bad.events[0] as { kind: string }).kind = "../secret";
+    expect(() => buildReceipt(bad, { keyPair })).toThrow(/kind/);
+  });
+  it("rejects a non-ISO issuedAt", () => {
+    expect(() => buildReceipt(raw, { keyPair, issuedAt: "yesterday" })).toThrow(/issuedAt/);
+  });
+  it("rejects an over-long public label", () => {
+    const bad = structuredClone(raw);
+    bad.job.category = "x".repeat(80);
+    expect(() => buildReceipt(bad, { keyPair })).toThrow(/too long|category/);
+  });
+
+  // finding #2: padded/duplicate machine metrics are caught
+  it("catches duplicate/padded machine metrics even when a correct row is present", () => {
+    const t = structuredClone(built.receipt);
+    const h1 = t.metrics.machineRecomputed.find((m) => m.name === "h1_count")!;
+    t.metrics.machineRecomputed.push({ ...h1, value: 99 });
+    t.metrics.machineRecomputed.push({ ...h1 }); // displayed as 1, 99, 1
+    const forged = reSign(t);
+    const v = verifyReceipt(forged, ART, { trustedIssuer: ISSUER });
+    expect(v.checkMismatches.length).toBeGreaterThan(0);
+    expect(v.ok).toBe(false);
+  });
+});

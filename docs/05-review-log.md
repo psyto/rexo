@@ -16,8 +16,20 @@ Seven confirmed findings, all resolved. Regression tests added for each.
 
 Result: typecheck clean, 41 tests green, CLI build/verify E2E + negative paths verified.
 
+## Round 2 (Codex re-review, 07-31)
+
+Two findings from round 1 were not fully closed; one new key-management issue. All resolved.
+
+| # | Severity | Finding | Resolution |
+|---|---|---|---|
+| 1 | Critical | Structural public strings (`capsule.id`, `event.kind`, `issuedAt`) trusted the scanner, which cannot see Base64/names/addresses | New `publish-guard.ts`: `kind` validated against an enum, `issuedAt` against strict ISO-8601, `capsule.id` against a lowercase slug, `version` numeric. Free-text labels are redacted **and** bounded (≤64 chars, no control chars). Violations throw `FieldRejectedError` (a `BuildBlockedError`) → nothing written. |
+| 2 | High | Verifier used a name→value map, so a padded `machineRecomputed` array (correct row + forged duplicate) passed | `diffChecks` now rejects duplicate names and any length mismatch before per-element equality, on both claimed arrays. |
+| 3 | Medium | Private signing key was written to `out/` before the privacy gate | Verifier key and salt envelope now live only in `vault/` (dir `0700`, files `0600`); `out/` holds publishable artifacts only. `verify` reads the trust anchor from `vault/verifier-key.json`. |
+
+Result: typecheck clean, 46 tests green, E2E confirms `out/` carries no private key and `vault/` is `0600`.
+
 ## Residual known limitations (not blocking Phase 0)
 
-- **Scanner is best-effort.** It does not detect Base64/high-entropy secrets, personal names, or postal addresses. Mitigation is structural, not the scanner: the published receipt carries no arbitrary free text, external fields are redacted, and the builder fails closed. Do not rely on the scanner to make free text safe.
+- **Scanner is best-effort.** It does not detect Base64/high-entropy secrets, personal names, or postal addresses. Mitigation is structural: structural fields are validated to a shape, free-text labels are bounded, and the builder fails closed. Event `summary` remains maker-authored free text (redacted, reviewed before publish per NFR-04) — it is the one field where the maker is trusted not to embed their own secrets.
 - **Single-file artifact commitment.** A real multi-file deliverable should commit to a bundle root (tar/zip/Merkle) and be checked inside that bundle. Phase 0 checks only the one committed HTML file.
 - **Machine checks are syntactic stand-ins** for a Lighthouse/link-check runner. The `reexec-core` adapter would replace `recomputeArtifact` with the real engine; the interface is unchanged.
