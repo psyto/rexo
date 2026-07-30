@@ -11,9 +11,9 @@ export interface RedactionResult {
 /**
  * Map a device-local RawTrace to the secret-free published side.
  *
- * Guarantees:
+ * Guarantees (for this stage — the builder adds a fail-closed final scan):
  *  - `rawText` never survives — it is dropped, only a redacted summary remains.
- *  - Every published string is scanned; any residual secret is redacted.
+ *  - Every published string is normalized + scanned; residual secrets redacted.
  *  - Findings record *where* secrets were, never *what* they were.
  */
 export function redactTrace(raw: RawTrace): RedactionResult {
@@ -21,29 +21,24 @@ export function redactTrace(raw: RawTrace): RedactionResult {
   const published: PublishedEvent[] = [];
 
   raw.events.forEach((ev, i) => {
-    // Record findings from the raw side (so the maker sees what was removed).
     if (ev.rawText) {
       for (const m of scan(ev.rawText)) {
         findings.push({ type: m.type, location: `events[${i}].rawText` });
       }
     }
-    // Build the published summary from the maker's summary if present, else a
-    // generic derivation of the raw text — always passed through redaction.
     const base = ev.summary ?? deriveSummary(ev);
     const { redacted, types } = redactString(base);
-    for (const t of types) {
-      findings.push({ type: t, location: `events[${i}].summary` });
-    }
+    for (const t of types) findings.push({ type: t, location: `events[${i}].summary` });
     published.push({
       kind: ev.kind,
-      ...(ev.tool ? { tool: ev.tool } : {}),
+      ...(ev.tool ? { tool: redactString(ev.tool).redacted } : {}),
       redactedSummary: redacted,
     });
   });
 
   const inputKinds: string[] = [];
   (raw.inputs ?? []).forEach((inp, i) => {
-    inputKinds.push(inp.kind);
+    inputKinds.push(redactString(inp.kind).redacted);
     if (inp.rawText) {
       for (const m of scan(inp.rawText)) {
         findings.push({ type: m.type, location: `inputs[${i}].rawText` });

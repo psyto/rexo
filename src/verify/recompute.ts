@@ -1,17 +1,24 @@
-import { readFileSync, existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { sha256hex } from "../crypto.js";
 import type { ArtifactCommitment, MachineMetric } from "../types.js";
 
 // The heart of the thesis: metrics are *recomputed* from the committed artifact
-// by whoever holds the artifact — not asserted by the maker. This stands in for
-// a Lighthouse/link-check runner; the interface is what a `reexec-core` adapter
-// would satisfy. Same bytes in → same metrics out (deterministic), so a third
-// party reproduces the exact same commitment and checks.
+// by whoever holds it — not asserted by the maker. This stands in for a
+// Lighthouse/link-check runner; the interface is what a `reexec-core` adapter
+// would satisfy.
+//
+// Determinism invariant: every check MUST be a pure function of the committed
+// artifact bytes. Nothing may touch the surrounding filesystem, clock, or
+// network — otherwise the same committed bytes could yield different metrics on
+// a different machine, and "independent recomputation from the artifact alone"
+// would be false. (An earlier `broken_relative_links` check `existsSync`'d
+// sibling files that were not part of the commitment; it is replaced here by a
+// pure count of relative references. A real multi-file artifact should commit
+// to a bundle root and be checked inside that bundle.)
 
 export function recomputeArtifact(artifactPath: string): ArtifactCommitment {
-  const abs = resolve(artifactPath);
-  const bytes = readFileSync(abs);
+  const bytes = readFileSync(resolve(artifactPath));
   const commitment = sha256hex(bytes);
   const html = bytes.toString("utf8");
   const checks: MachineMetric[] = [
@@ -26,9 +33,9 @@ export function recomputeArtifact(artifactPath: string): ArtifactCommitment {
       "ratio",
     ),
     metric(
-      "broken_relative_links",
-      countBrokenRelativeLinks(html, dirname(abs)),
-      "href/src to local files that do not exist on disk",
+      "relative_asset_refs",
+      countRelativeRefs(html),
+      "count of relative href/src references in the committed HTML bytes",
     ),
   ];
   return { commitment, checks };
@@ -54,7 +61,7 @@ function imgAltCoverage(html: string): number {
   return round(withAlt / imgs.length, 3);
 }
 
-function countBrokenRelativeLinks(html: string, baseDir: string): number {
+function countRelativeRefs(html: string): number {
   const refs = new Set<string>();
   const re = /(?:href|src)=["']([^"'#?]+)["']/gi;
   let m: RegExpExecArray | null;
@@ -64,11 +71,7 @@ function countBrokenRelativeLinks(html: string, baseDir: string): number {
     if (/^(?:https?:|mailto:|tel:|data:|\/\/|#)/i.test(ref)) continue; // external/anchor
     refs.add(ref);
   }
-  let broken = 0;
-  for (const ref of refs) {
-    if (!existsSync(resolve(baseDir, ref))) broken++;
-  }
-  return broken;
+  return refs.size;
 }
 
 function round(n: number, dp: number): number {

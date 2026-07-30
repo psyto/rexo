@@ -39,6 +39,21 @@ describe("scanner", () => {
     expect(scan("昼は定食、夜は一品とお酒。駅前徒歩3分。")).toHaveLength(0);
   });
 
+  it("catches full-width email after NFKC normalization", () => {
+    const found = scan("連絡先 ｏｗｎｅｒ＠ｅｘａｍｐｌｅ．ｃｏｍ まで");
+    expect(found.some((f) => f.type === "email")).toBe(true);
+  });
+
+  it("catches full-width phone after NFKC normalization", () => {
+    const found = scan("電話 ０３－１２３４－５６７８");
+    expect(found.some((f) => f.type === "jp_phone")).toBe(true);
+  });
+
+  it("catches a zero-width-split email", () => {
+    const found = scan("mail ow" + "\u200B" + "ner@example.com now");
+    expect(found.some((f) => f.type === "email")).toBe(true);
+  });
+
   it("redactString replaces the secret and never leaves it behind", () => {
     const { redacted, types } = redactString("mail owner@sakura-diner.example now");
     expect(redacted).toContain("[REDACTED:email]");

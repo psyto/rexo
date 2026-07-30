@@ -1,10 +1,14 @@
 // Secret / PII scanner. Runs on any string before it can leave the device.
-// The point is defense-in-depth: even a maker-written "summary" is scanned, and
-// the published Receipt is scanned again in the verifier as a final gate.
+//
+// This is DEFENSE-IN-DEPTH, not the primary guarantee. It has known false
+// negatives (Base64/high-entropy secrets, names, postal addresses, contacts
+// split across newlines). The primary guarantees are elsewhere: the published
+// receipt carries no free-form raw text, and the builder fails closed if any
+// residual secret is detected before writing. Never rely on the scanner alone
+// to make arbitrary free text safe to publish.
 
 export interface SecretMatch {
   type: string;
-  /** Start index in the scanned string. The matched text itself is never returned. */
   index: number;
   length: number;
 }
@@ -12,7 +16,6 @@ export interface SecretMatch {
 interface Pattern {
   type: string;
   re: RegExp;
-  /** Optional extra validation (e.g. Luhn) to cut false positives. */
   validate?: (m: string) => boolean;
 }
 
@@ -52,12 +55,23 @@ function luhn(digits: string): boolean {
   return sum % 10 === 0;
 }
 
+/**
+ * NFKC-normalize and strip zero-width / invisible characters so that full-width
+ * (ｏｗｎｅｒ＠…, ０３－…) and zero-width-obfuscated secrets collapse to their
+ * ASCII form before pattern matching. Scanning and redaction both run on this
+ * normalized form.
+ */
+export function normalizeForScan(text: string): string {
+  return text.normalize("NFKC").replace(/[\u200B\u200C\u200D\u2060\uFEFF\u00AD]/g, "");
+}
+
 export function scan(text: string): SecretMatch[] {
+  const normalized = normalizeForScan(text);
   const matches: SecretMatch[] = [];
   for (const p of PATTERNS) {
     p.re.lastIndex = 0;
     let m: RegExpExecArray | null;
-    while ((m = p.re.exec(text)) !== null) {
+    while ((m = p.re.exec(normalized)) !== null) {
       if (p.validate && !p.validate(m[0])) continue;
       matches.push({ type: p.type, index: m.index, length: m[0].length });
     }
@@ -65,20 +79,20 @@ export function scan(text: string): SecretMatch[] {
   return matches;
 }
 
-/** Replace every detected secret with a `[REDACTED:type]` marker. */
+/** Replace every detected secret with a `[REDACTED:type]` marker (on normalized text). */
 export function redactString(text: string): { redacted: string; types: string[] } {
-  const found = scan(text).sort((a, b) => a.index - b.index);
-  if (found.length === 0) return { redacted: text, types: [] };
+  const normalized = normalizeForScan(text);
+  const found = scan(normalized).sort((a, b) => a.index - b.index);
+  if (found.length === 0) return { redacted: normalized, types: [] };
   let out = "";
   let cursor = 0;
   const types: string[] = [];
-  // Skip overlaps: keep the earliest match, advance past it.
   for (const f of found) {
-    if (f.index < cursor) continue;
-    out += text.slice(cursor, f.index) + `[REDACTED:${f.type}]`;
+    if (f.index < cursor) continue; // skip overlaps
+    out += normalized.slice(cursor, f.index) + `[REDACTED:${f.type}]`;
     cursor = f.index + f.length;
     types.push(f.type);
   }
-  out += text.slice(cursor);
+  out += normalized.slice(cursor);
   return { redacted: out, types };
 }
