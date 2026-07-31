@@ -56,20 +56,35 @@ const CSS = `
   pre.secret { background: var(--bad-bg); border: 1px solid var(--bad); border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-word; margin: 6px 0; font-size: 12px; }
   .findings { max-width: 780px; margin: 14px auto 0; font-size: 13px; color: var(--muted); }
   code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
-  /* profile / résumé */
-  .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 0 0 22px; }
-  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
-  .tile .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .tile .n.good { color: var(--good); }
-  .tile .t { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .entry { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-  .entry .tick { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--good-bg); color: var(--good); }
-  .entry .tick.no { background: var(--bad-bg); color: var(--bad); }
-  .entry .body { flex: 1 1 auto; min-width: 0; }
-  .entry .title { font-weight: 650; }
-  .entry .sub { font-size: 12px; color: var(--muted); }
-  .entry .headline { font-size: 13px; font-weight: 650; white-space: nowrap; }
+  /* profile / résumé (LinkedIn-style) */
+  .lp { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+  .banner { height: 84px; background: linear-gradient(120deg, var(--accent), #6d3bdb); }
+  .lp .pad { padding: 0 24px 22px; }
+  .avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 32px; font-weight: 700; border: 4px solid var(--card); margin-top: -44px; }
+  .name { font-size: 24px; font-weight: 700; margin: 10px 0 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .verbadge { font-size: 12px; font-weight: 700; color: var(--good); background: var(--good-bg); border-radius: 999px; padding: 3px 10px; }
+  .headline2 { font-size: 15px; }
+  .metaline { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .skill { font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+  .hi { display: flex; gap: 22px; margin-top: 16px; flex-wrap: wrap; }
+  .hi .h { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .hi .h.good { color: var(--good); }
+  .hi .l { font-size: 12px; color: var(--muted); }
+  .sec { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
+  .sec > h2 { margin: 0 0 2px; font-size: 18px; text-transform: none; letter-spacing: 0; color: var(--fg); }
+  .xp { display: grid; grid-template-columns: 48px 1fr; gap: 14px; padding: 18px 0; border-top: 1px solid var(--line); }
+  .xp.first { border-top: 0; padding-top: 8px; }
+  .xpicon { width: 48px; height: 48px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); display: grid; place-items: center; font-size: 24px; }
+  .xptop { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .xptitle { font-weight: 700; font-size: 16px; }
+  .xpdate { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .xpsub { color: var(--muted); font-size: 13px; margin: 1px 0 4px; }
+  .xpbul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+  .xpbul li { margin: 3px 0; }
+  .xpbul b { font-variant-numeric: tabular-nums; }
+  .xpver { font-size: 12px; font-weight: 600; color: var(--good); margin-top: 8px; }
+  .xpver.no { color: var(--bad); }
 `;
 
 const LABELS: Record<string, string> = {
@@ -98,8 +113,6 @@ function fmtMetric(m: MachineMetric): { text: string; cls: string } {
 
 function credentialBody(receipt: Receipt, verify: VerificationResult): string {
   const cat = esc(receipt.conditions.category);
-  const dom = receipt.conditions.domain ? ` / ${esc(receipt.conditions.domain)}` : "";
-
   const facts = [
     ["使用ツール", receipt.toolsUsed.map(esc).join(", ") || "—", ""],
     ["改訂回数", String(receipt.execution.revisions), ""],
@@ -136,7 +149,7 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
       <div class="seal ${verify.ok ? "" : "bad"}">${verify.ok ? "✓" : "!"}</div>
       <div>
         <div class="kicker">Verified Execution Credential · @${esc(receipt.subject.maker)}</div>
-        <h1>${cat}${dom}</h1>
+        <h1>${esc(receipt.title ?? receipt.conditions.category)}</h1>
       </div>
     </div>
     <p class="hero">AI 支援で <b>${cat}</b> ${esc(HERO_VERB[receipt.artifact.kind] ?? "を遂行")}。独立検証者が成果物を<b>再計算チェック</b>済み。顧客データは受領内に留まり、この証明には含まれません。</p>
@@ -212,51 +225,108 @@ export interface ProfileEntry {
 export function renderProfile(maker: string, entries: ProfileEntry[]): string {
   const n = entries.length;
   const verified = entries.filter((e) => e.verify.ok).length;
-  const categories = [...new Set(entries.map((e) => e.receipt.conditions.category))];
-  const factsRecomputed = entries.reduce((s, e) => s + e.receipt.metrics.machineRecomputed.length, 0);
-
   const swe = entries.filter((e) => e.receipt.artifact.kind === "swe");
-  const fixesProven = swe.filter((e) => metricVal(e.receipt, "target_test_passes") === true).length;
+  const fixes = swe.filter((e) => metricVal(e.receipt, "target_test_passes") === true).length;
   const regressions = swe.reduce((s, e) => s + Number(metricVal(e.receipt, "regressions") ?? 0), 0);
+  const facts = entries.reduce((s, e) => s + e.receipt.metrics.machineRecomputed.length, 0);
+  const skills = [...new Set(entries.flatMap((e) => e.receipt.toolsUsed))];
+  const domains = [...new Set(entries.map((e) => e.receipt.conditions.domain).filter(Boolean) as string[])];
 
-  const tile = (num: string, label: string, good = false) =>
-    `<div class="tile"><div class="n ${good ? "good" : ""}">${num}</div><div class="t">${esc(label)}</div></div>`;
+  // reverse-chronological, like a résumé
+  const sorted = [...entries].sort((a, b) =>
+    (b.receipt.completedAt ?? "").localeCompare(a.receipt.completedAt ?? ""),
+  );
 
-  const stats = [
-    tile(String(n), "検証済みクレデンシャル"),
-    tile(`${verified}/${n}`, "独立に検証済み", verified === n),
-    tile(String(fixesProven), "証明された修正 (SWE)"),
-    tile(String(regressions), "回帰の合計", regressions === 0),
-    tile(String(factsRecomputed), "再計算された事実"),
-  ].join("");
+  const mono = (maker.slice(0, 2) || "?").toUpperCase();
+  const hi = (num: string, l: string, good = false) =>
+    `<div><div class="h ${good ? "good" : ""}">${esc(num)}</div><div class="l">${esc(l)}</div></div>`;
 
-  const rows = entries
-    .map((e) => {
+  const xps = sorted
+    .map((e, i) => {
       const r = e.receipt;
       const ok = e.verify.ok;
-      const headline =
-        r.artifact.kind === "swe"
-          ? `対象通過 ${metricVal(r, "target_test_passes") ? "✓" : "✗"} · ${metricVal(r, "tests_passed")}/${Number(metricVal(r, "tests_passed") ?? 0) + Number(metricVal(r, "tests_failed") ?? 0)} · 回帰${metricVal(r, "regressions")}`
-          : `品質チェック ${r.metrics.machineRecomputed.length} 項目`;
-      return `<div class="entry">
-        <div class="tick ${ok ? "" : "no"}">${ok ? "✓" : "✗"}</div>
-        <div class="body"><div class="title">${esc(r.conditions.category)}</div><div class="sub">${esc(r.artifact.kind)} · ${r.execution.revisions} rev · ${esc(r.execution.costBand)} / ${esc(r.execution.durationBand)}</div></div>
-        <div class="headline">${esc(headline)}</div>
+      const title = r.title ?? humanizeCat(r.conditions.category);
+      const date = r.completedAt ? fmtMonth(r.completedAt) : "";
+      const sub = `${kindLabel(r.artifact.kind)}${r.conditions.domain ? " · " + esc(r.conditions.domain) : ""} · 改訂 ${r.execution.revisions} · ${esc(r.execution.costBand)} / ${esc(r.execution.durationBand)}`;
+      const bullets = bulletsFor(r).map((b) => `<li>${b}</li>`).join("");
+      return `<div class="xp${i === 0 ? " first" : ""}">
+        <div class="xpicon">${iconFor(r)}</div>
+        <div>
+          <div class="xptop"><div class="xptitle">${esc(title)}</div><div class="xpdate">${esc(date)}</div></div>
+          <div class="xpsub">${sub}</div>
+          <ul class="xpbul">${bullets}</ul>
+          <div class="xpver ${ok ? "" : "no"}">${ok ? "✓ 独立に検証済み（署名・成果物の再計算一致・正規形・秘密ゼロ）" : "✗ 未検証"}</div>
+        </div>
       </div>`;
     })
     .join("");
 
   const body = `<div class="wrap">
-    <div class="phead">
-      <div class="seal ${verified === n ? "" : "bad"}">✓</div>
-      <div><div class="kicker">Verified Track Record</div><h1>@${esc(maker)}</h1></div>
+    <div class="lp">
+      <div class="banner"></div>
+      <div class="pad">
+        <div class="avatar">${esc(mono)}</div>
+        <div class="name">@${esc(maker)} <span class="verbadge">✓ Verified</span></div>
+        <div class="headline2">AI 支援エンジニアリング — 検証済み実行実績</div>
+        <div class="metaline">独立検証者が各成果物を再実行チェック · 顧客データ / 専有ソース非公開${domains.length ? " · " + domains.map(esc).join(" / ") : ""}</div>
+        <div class="hi">
+          ${hi(String(n), "検証済み実績")}
+          ${hi(`${verified}/${n}`, "独立検証", verified === n)}
+          ${hi(String(fixes), "証明された修正")}
+          ${hi(String(regressions), "回帰合計", regressions === 0)}
+          ${hi(String(facts), "再計算した事実")}
+        </div>
+        ${skills.length ? `<div class="skills">${skills.map((s) => `<span class="skill">${esc(s)}</span>`).join("")}</div>` : ""}
+      </div>
     </div>
-    <p class="hero">独立検証者が各成果物を<b>再計算チェック</b>した実行実績。すべて第三者が再検証でき、顧客データと専有ソースは含まれません。</p>
-    <div class="stats">${stats}</div>
-    <h2>クレデンシャル一覧（${esc(categories.join(" · "))}）</h2>
-    ${rows}
+    <div class="sec">
+      <h2>Experience</h2>
+      <p class="metaline" style="margin:0 0 6px">各項目は receipt.json と成果物で第三者が独立に再検証できます。</p>
+      ${xps}
+    </div>
   </div>`;
-  return page(`Track Record — @${esc(maker)}`, body);
+  return page(`@${esc(maker)} — Verified Track Record`, body);
+}
+
+const CATEGORY_JA: Record<string, string> = {
+  "evm-reexec-bugfix": "EVM 再実行のバグ修正",
+  "smart-contract-remediation": "スマートコントラクト脆弱性の修正",
+  "bugfix-typescript": "TypeScript バグ修正",
+  "restaurant-lp": "飲食店 LP 制作",
+};
+function humanizeCat(c: string): string {
+  return CATEGORY_JA[c] ?? c.replace(/-/g, " ");
+}
+function kindLabel(k: string): string {
+  return k === "swe" ? "ソフトウェア修正（独立再実行）" : "Web 制作（独立再計算）";
+}
+function iconFor(r: Receipt): string {
+  const d = r.conditions.domain;
+  if (d === "evm") return "⛓️";
+  if (d === "defi") return "🛡️";
+  if (d === "web") return "🌐";
+  if (d === "backend") return "🔧";
+  return "✅";
+}
+function fmtMonth(d: string): string {
+  const [y, m] = d.split("-");
+  return m ? `${y}年${Number(m)}月` : (y ?? d);
+}
+function bulletsFor(r: Receipt): string[] {
+  const b: string[] = [];
+  if (r.artifact.kind === "swe") {
+    const tp = Number(metricVal(r, "tests_passed") ?? 0);
+    const tf = Number(metricVal(r, "tests_failed") ?? 0);
+    if (metricVal(r, "target_test_passes") === true) b.push("対象の回帰テストが<b>独立再実行で通過</b>（改ざん不能）");
+    b.push(`テスト <b>${tp}/${tp + tf}</b> 通過・回帰 <b>${esc(String(metricVal(r, "regressions") ?? 0))}</b>`);
+    b.push("顧客データ・専有ソースは非公開（bundle ハッシュのみ公開）");
+  } else {
+    b.push(`成果物の品質指標 <b>${r.metrics.machineRecomputed.length}</b> 項目を<b>独立再計算</b>`);
+    b.push("顧客データは非公開");
+  }
+  const t = r.toolsUsed.slice(0, 4).map(esc).join(", ");
+  if (t) b.push(`使用ツール: ${t}`);
+  return b;
 }
 
 function metricVal(r: Receipt, name: string): number | string | boolean | undefined {

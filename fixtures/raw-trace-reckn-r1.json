@@ -1,6 +1,12 @@
 {
   "maker": "psyto",
-  "job": { "id": "reckn-r1-basefee-nonce", "category": "evm-reexec-bugfix", "domain": "evm" },
+  "job": {
+    "id": "reckn-r1-basefee-nonce",
+    "category": "evm-reexec-bugfix",
+    "domain": "evm",
+    "title": "reexec-evm: replay の base-fee/nonce ゲート誤判定を修正",
+    "date": "2026-07-26"
+  },
   "artifactKind": "swe",
   "artifactPath": "fixtures/reckn-r1-bundle",
   "events": [
@@ -11,11 +17,23 @@
       "costUsd": 0.48,
       "durationMs": 360000
     },
-    { "kind": "edit", "summary": "replay cfg で disable_base_fee + disable_nonce_check を設定（balance は維持）", "durationMs": 150000 },
-    { "kind": "eval", "tool": "cargo-test", "summary": "base_fee=1gwei/nonce=7 の回帰テストを追加し全テスト再実行", "durationMs": 40000 }
+    {
+      "kind": "edit",
+      "summary": "replay cfg で disable_base_fee + disable_nonce_check を設定（balance は維持）",
+      "durationMs": 150000
+    },
+    {
+      "kind": "eval",
+      "tool": "cargo-test",
+      "summary": "base_fee=1gwei/nonce=7 の回帰テストを追加し全テスト再実行",
+      "durationMs": 40000
+    }
   ],
   "inputs": [
-    { "kind": "review-finding", "rawText": "R1（CC cross-pass / MPT milestone、origin=初期 reexec-evm の gas_price=0）" }
+    {
+      "kind": "review-finding",
+      "rawText": "R1（CC cross-pass / MPT milestone、origin=初期 reexec-evm の gas_price=0）"
+    }
   ],
   "attestedMetrics": [],
   "revisions": 1

@@ -1,6 +1,12 @@
 {
   "maker": "psyto",
-  "job": { "id": "remediate-ltv-bypass", "category": "smart-contract-remediation", "domain": "defi" },
+  "job": {
+    "id": "remediate-ltv-bypass",
+    "category": "smart-contract-remediation",
+    "domain": "defi",
+    "title": "貸付プロトコルの LTV 超過 borrow 脆弱性を修正",
+    "date": "2026-06-14"
+  },
   "artifactKind": "swe",
   "artifactPath": "fixtures/contract-bundle",
   "events": [
@@ -11,11 +17,23 @@
       "costUsd": 0.55,
       "durationMs": 300000
     },
-    { "kind": "edit", "summary": "borrow に LTV 上限チェックを追加", "durationMs": 180000 },
-    { "kind": "eval", "tool": "forge", "summary": "exploit PoC と不変条件を再実行", "durationMs": 45000 }
+    {
+      "kind": "edit",
+      "summary": "borrow に LTV 上限チェックを追加",
+      "durationMs": 180000
+    },
+    {
+      "kind": "eval",
+      "tool": "forge",
+      "summary": "exploit PoC と不変条件を再実行",
+      "durationMs": 45000
+    }
   ],
   "inputs": [
-    { "kind": "audit-scope", "rawText": "顧客: Nyx Finance（非公開監査・未公開ソース）。連絡先 security@nyx.example、電話 03-9876-5432。" }
+    {
+      "kind": "audit-scope",
+      "rawText": "顧客: Nyx Finance（非公開監査・未公開ソース）。連絡先 security@nyx.example、電話 03-9876-5432。"
+    }
   ],
   "attestedMetrics": [],
   "revisions": 1

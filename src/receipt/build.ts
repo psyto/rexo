@@ -3,7 +3,7 @@ import { redactTrace } from "../redact/redact.js";
 import { recompute } from "../verify/recompute.js";
 import { canonicalize } from "../canonical.js";
 import { scan } from "../redact/scanner.js";
-import { PrivacyGateError, assertIssuedAt, assertCapsule, label } from "../publish-guard.js";
+import { PrivacyGateError, assertIssuedAt, assertCapsule, assertDate, label } from "../publish-guard.js";
 import { sha256hex, randomSalt, signMessage, generateVerifierKey, type KeyPair } from "../crypto.js";
 
 export { PrivacyGateError } from "../publish-guard.js";
@@ -51,6 +51,9 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
     ...(raw.job.domain ? { domain: label(raw.job.domain, "job.domain") } : {}),
     inputKinds,
   };
+  const title = raw.job.title ? label(raw.job.title, "job.title") : undefined;
+  if (raw.job.date) assertDate(raw.job.date, "job.date");
+  const completedAt = raw.job.date;
 
   // Core claims are what the salt commitment binds — kept separate from
   // presentation fields so the commitment is stable and meaningful.
@@ -62,6 +65,8 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
     subject,
     capsule,
     conditions,
+    ...(title ? { title } : {}),
+    ...(completedAt ? { completedAt } : {}),
     toolsUsed,
     execution: { revisions, costBand, durationBand },
     artifact,

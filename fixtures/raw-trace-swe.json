@@ -1,6 +1,12 @@
 {
   "maker": "psyto",
-  "job": { "id": "fix-classify-zero", "category": "bugfix-typescript", "domain": "backend" },
+  "job": {
+    "id": "fix-classify-zero",
+    "category": "bugfix-typescript",
+    "domain": "backend",
+    "title": "classify() のゼロ値分岐バグを修正",
+    "date": "2026-05-02"
+  },
   "artifactKind": "swe",
   "artifactPath": "fixtures/swe-bundle",
   "events": [
@@ -8,14 +14,26 @@
       "kind": "llm_call",
       "tool": "claude-opus",
       "rawText": "Repo acme-billing @c0ffee. Failing test: classify(0) must return 'zero'. Env has OPENAI key sk-proj-ABCD1234abcd5678EFGH9012ijkl. Contact dev@acme.example.",
-      "costUsd": 0.30,
+      "costUsd": 0.3,
       "durationMs": 240000
     },
-    { "kind": "edit", "summary": "classify に 0 の分岐を追加", "durationMs": 120000 },
-    { "kind": "eval", "tool": "vitest", "summary": "全テストを再実行して回帰を確認", "durationMs": 30000 }
+    {
+      "kind": "edit",
+      "summary": "classify に 0 の分岐を追加",
+      "durationMs": 120000
+    },
+    {
+      "kind": "eval",
+      "tool": "vitest",
+      "summary": "全テストを再実行して回帰を確認",
+      "durationMs": 30000
+    }
   ],
   "inputs": [
-    { "kind": "issue", "rawText": "顧客: Acme Billing（社内リポジトリ・非公開ソース）。連絡先 dev@acme.example、電話 03-1234-5678。" }
+    {
+      "kind": "issue",
+      "rawText": "顧客: Acme Billing（社内リポジトリ・非公開ソース）。連絡先 dev@acme.example、電話 03-1234-5678。"
+    }
   ],
   "attestedMetrics": [],
   "revisions": 1

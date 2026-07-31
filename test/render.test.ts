@@ -61,8 +61,9 @@ describe("renderProfile (verified track record / résumé)", () => {
     const html = renderProfile("psyto", entries);
     expect(html).toContain("Verified Track Record");
     expect(html).toContain("@psyto");
-    expect(html).toContain("検証済みクレデンシャル");
+    expect(html).toContain("Experience"); // résumé section
     expect(html).toContain("証明された修正");
+    expect(html).toContain("独立に検証済み"); // per-entry verified line
     // three swe fixes, all verified, zero regressions in the roll-up
     expect(entries.every((e) => e.verify.ok)).toBe(true);
     // no secret leaks into the aggregated page

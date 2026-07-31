@@ -55,6 +55,10 @@ export function assertIssuedAt(s: string): void {
   if (!ISO_8601_UTC.test(s)) throw new FieldRejectedError("issuedAt", "not strict ISO-8601 UTC");
 }
 
+export function assertDate(s: string, field: string): void {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) throw new FieldRejectedError(field, "must be YYYY-MM-DD");
+}
+
 export function assertCapsule(c: { id: string; version: string }): void {
   if (c.id.length > MAX_LABEL || !SLUG.test(c.id)) {
     throw new FieldRejectedError("capsule.id", "must be a lowercase slug ≤64 chars");

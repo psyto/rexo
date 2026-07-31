@@ -1,6 +1,12 @@
 {
   "maker": "psyto",
-  "job": { "id": "job-sakura-lp", "category": "restaurant-lp", "domain": "web" },
+  "job": {
+    "id": "job-sakura-lp",
+    "category": "restaurant-lp",
+    "domain": "web",
+    "title": "さくら食堂 ランディングページ制作",
+    "date": "2026-04-10"
+  },
   "events": [
     {
       "kind": "llm_call",
@@ -16,17 +22,41 @@
       "costUsd": 0.01,
       "durationMs": 30000
     },
-    { "kind": "edit", "summary": "hero コピーを3案作って一番刺さるものへ差し替え", "durationMs": 300000 },
-    { "kind": "edit", "summary": "CTA ボタンをファーストビュー内に移動", "durationMs": 180000 },
-    { "kind": "eval", "tool": "lighthouse", "summary": "パフォーマンスとアクセシビリティを測定", "durationMs": 60000 }
+    {
+      "kind": "edit",
+      "summary": "hero コピーを3案作って一番刺さるものへ差し替え",
+      "durationMs": 300000
+    },
+    {
+      "kind": "edit",
+      "summary": "CTA ボタンをファーストビュー内に移動",
+      "durationMs": 180000
+    },
+    {
+      "kind": "eval",
+      "tool": "lighthouse",
+      "summary": "パフォーマンスとアクセシビリティを測定",
+      "durationMs": 60000
+    }
   ],
   "inputs": [
-    { "kind": "brief", "rawText": "クライアント: さくら食堂。連絡先 owner@sakura-diner.example、電話 03-1234-5678。競合はチェーン定食店。" },
-    { "kind": "brand-assets", "rawText": "ロゴ画像とメニュー写真一式（社外秘）" }
+    {
+      "kind": "brief",
+      "rawText": "クライアント: さくら食堂。連絡先 owner@sakura-diner.example、電話 03-1234-5678。競合はチェーン定食店。"
+    },
+    {
+      "kind": "brand-assets",
+      "rawText": "ロゴ画像とメニュー写真一式（社外秘）"
+    }
   ],
   "artifactPath": "fixtures/artifact/index.html",
   "attestedMetrics": [
-    { "name": "CVR", "value": 4.8, "unit": "%", "attestation": "client-sig:0xsakura-owner" }
+    {
+      "name": "CVR",
+      "value": 4.8,
+      "unit": "%",
+      "attestation": "client-sig:0xsakura-owner"
+    }
   ],
   "revisions": 3
 }

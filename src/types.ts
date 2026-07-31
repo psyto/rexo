@@ -34,6 +34,10 @@ export interface RawTrace {
     /** Coarse category only, e.g. "restaurant-lp". No client identifiers. */
     category: string;
     domain?: string;
+    /** Human, résumé-style headline for this credential (public label). */
+    title?: string;
+    /** Completion date, YYYY-MM-DD — the experience date on the résumé. */
+    date?: string;
   };
   events: RawEvent[];
   /** Raw client inputs (brief, copy, assets). Secret-capable. */
@@ -94,6 +98,10 @@ export interface Receipt {
     /** Kinds of inputs involved, categories only — never the inputs themselves. */
     inputKinds: string[];
   };
+  /** Résumé-style headline for this credential (maker-authored public label). */
+  title?: string;
+  /** Completion date, YYYY-MM-DD. */
+  completedAt?: string;
   toolsUsed: string[];
   execution: {
     revisions: number;
