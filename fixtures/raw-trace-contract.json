@@ -1,0 +1,21 @@
+{
+  "job": { "id": "remediate-ltv-bypass", "category": "smart-contract-remediation", "domain": "defi" },
+  "artifactKind": "swe",
+  "artifactPath": "fixtures/contract-bundle",
+  "events": [
+    {
+      "kind": "llm_call",
+      "tool": "claude-opus",
+      "rawText": "Private audit for Nyx Finance. Vault @ 0xA2GDb4Um...; borrow() misses the LTV cap → under-collateralized debt. Deployer key sk-ant-api03-SECRETSECRETSECRETSECRET. Contact security@nyx.example.",
+      "costUsd": 0.55,
+      "durationMs": 300000
+    },
+    { "kind": "edit", "summary": "borrow に LTV 上限チェックを追加", "durationMs": 180000 },
+    { "kind": "eval", "tool": "forge", "summary": "exploit PoC と不変条件を再実行", "durationMs": 45000 }
+  ],
+  "inputs": [
+    { "kind": "audit-scope", "rawText": "顧客: Nyx Finance（非公開監査・未公開ソース）。連絡先 security@nyx.example、電話 03-9876-5432。" }
+  ],
+  "attestedMetrics": [],
+  "revisions": 1
+}

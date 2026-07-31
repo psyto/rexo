@@ -14,7 +14,19 @@
 > The receipt proves: "target test `classifies zero` now passes, 5/5 tests pass,
 > 0 regressions" — independently recomputed by re-executing `fixtures/swe-bundle`.
 >
-> To make your own SWE bundle, mirror `fixtures/swe-bundle/`:
+> **Security-remediation flagship (same adapter, crypto-native audience):**
+> ```
+> npx tsx src/cli.ts build  --fixture fixtures/raw-trace-contract.json
+> npx tsx src/cli.ts verify --receipt out/receipt.json --artifact fixtures/contract-bundle
+> ```
+> Proves "the exploit PoC is now rejected, all invariants still hold (4/4), 0
+> regressions" — by re-running the committed exploit + invariant suite against
+> the patched code. The vulnerable/patched source and the audit client are never
+> published. Here the target test IS the exploit (passes only when the vuln is
+> closed); invariants are the other tests. Best fit for the founder's
+> solinv / reexec-core lineage.
+>
+> To make your own SWE bundle, mirror `fixtures/swe-bundle/` (or `fixtures/contract-bundle/`):
 > - `solution.mjs` — the delivered code (committed, hashed, never published)
 > - `tests.mjs` — the committed suite, `export const tests = [{ name, run }]`
 > - `bundle.json` — `{ "target": "<the once-failing test>", "baseline": { "<name>": <passed-before?> } }`

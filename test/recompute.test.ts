@@ -87,3 +87,17 @@ describe("recompute swe", () => {
     expect(Number(check("tests_failed", r.checks))).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("recompute swe — contract remediation (same adapter)", () => {
+  const BUNDLE = "fixtures/contract-bundle";
+  it("proves the exploit is closed and invariants hold, via re-execution", () => {
+    const r = recompute("swe", BUNDLE);
+    expect(r.kind).toBe("swe");
+    // target = the exploit test; passes only when the vulnerability is patched
+    expect(check("target_test_passes", r.checks)).toBe(true);
+    expect(check("tests_passed", r.checks)).toBe(4);
+    expect(check("tests_failed", r.checks)).toBe(0);
+    // no invariant that held in the baseline now fails
+    expect(check("regressions", r.checks)).toBe(0);
+  });
+});

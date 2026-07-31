@@ -1,0 +1,9 @@
+{
+  "target": "exploit: borrow beyond LTV is rejected",
+  "baseline": {
+    "normal borrow within LTV succeeds": true,
+    "exploit: borrow beyond LTV is rejected": false,
+    "invariant: debt never exceeds collateral * LTV": false,
+    "invariant: users are isolated": true
+  }
+}

@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -40,11 +40,13 @@ export function recomputeWeb(artifactPath: string): ArtifactCommitment {
 // swe — re-run the committed test suite against the committed solution
 // ---------------------------------------------------------------------------
 //
-// The bundle directory commits three files: solution.mjs (the deliverable),
-// tests.mjs (the suite, imports solution.mjs), bundle.json ({ target, baseline }).
-// The verifier re-executes the suite in an isolated child process with a timeout
-// and recomputes: does the previously-failing TARGET test now pass, how many
-// tests pass/fail, the pass rate, and regressions vs the committed baseline.
+// The bundle directory commits the deliverable source (any number of .mjs files,
+// e.g. solution.mjs or vault.mjs) plus tests.mjs (the suite, importing the
+// deliverable) and bundle.json ({ target, baseline }). The commitment binds
+// EVERY file in the bundle. The verifier re-executes the suite in an isolated
+// child process with a timeout and recomputes: does the previously-failing
+// TARGET test now pass, how many tests pass/fail, the pass rate, and regressions
+// vs the committed baseline.
 //
 // SECURITY (Phase 0): this runs the maker's committed JS. It is isolated in a
 // child process with a timeout, but a real deployment must sandbox it (container
@@ -61,18 +63,23 @@ interface RunResult {
 
 export function recomputeSwe(bundlePath: string): ArtifactCommitment {
   const dir = resolve(bundlePath);
-  const solutionPath = resolve(dir, "solution.mjs");
   const testsPath = resolve(dir, "tests.mjs");
   const metaPath = resolve(dir, "bundle.json");
-  for (const p of [solutionPath, testsPath, metaPath]) {
+  for (const p of [testsPath, metaPath]) {
     if (!existsSync(p)) throw new Error(`swe bundle missing ${p}`);
   }
-  const solBytes = readFileSync(solutionPath);
-  const testBytes = readFileSync(testsPath);
-  const metaBytes = readFileSync(metaPath);
+  // Commitment binds every file in the bundle (name + bytes), sorted for
+  // determinism — so multi-file deliverables are covered, not just one file.
   const NUL = Buffer.from([0]);
-  const commitment = sha256hex(Buffer.concat([solBytes, NUL, testBytes, NUL, metaBytes]));
-  const meta = JSON.parse(metaBytes.toString("utf8")) as BundleMeta;
+  const names = readdirSync(dir)
+    .filter((n) => statSync(resolve(dir, n)).isFile())
+    .sort();
+  const parts: Buffer[] = [];
+  for (const n of names) {
+    parts.push(Buffer.from(n, "utf8"), NUL, readFileSync(resolve(dir, n)), NUL);
+  }
+  const commitment = sha256hex(Buffer.concat(parts));
+  const meta = JSON.parse(readFileSync(metaPath).toString("utf8")) as BundleMeta;
 
   const runnerPath = resolve(dirname(fileURLToPath(import.meta.url)), "swe-runner.mjs");
   const raw = execFileSync("node", [runnerPath, testsPath], { timeout: 10_000, encoding: "utf8" });
