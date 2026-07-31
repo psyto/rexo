@@ -4,7 +4,7 @@ import type { RawTrace, Receipt } from "./types.js";
 import { buildReceipt } from "./receipt/build.js";
 import { BuildBlockedError } from "./publish-guard.js";
 import { verifyReceipt, type VerificationResult } from "./receipt/verify.js";
-import { renderPublishedReceipt, renderLocalComparison } from "./receipt/render.js";
+import { renderPublishedReceipt, renderLocalComparison, renderProfile, type ProfileEntry } from "./receipt/render.js";
 import { canonicalize } from "./canonical.js";
 import { generateVerifierKey, type KeyPair } from "./crypto.js";
 
@@ -138,10 +138,40 @@ function printVerify(v: VerificationResult): string {
   ].join("\n");
 }
 
+// Aggregate several jobs into one maker's verified track record (résumé).
+function cmdProfile(): void {
+  const outDir = arg("--out", "out")!;
+  const fixtures = arg(
+    "--fixtures",
+    "fixtures/raw-trace-reckn-r1.json,fixtures/raw-trace-contract.json,fixtures/raw-trace-swe.json,fixtures/raw-trace.json",
+  )!.split(",").map((s) => s.trim());
+  const keyPair = loadKey();
+  const entries: ProfileEntry[] = [];
+  let maker = "unknown";
+  for (const f of fixtures) {
+    const raw = JSON.parse(readFileSync(resolve(f), "utf8")) as RawTrace;
+    let built;
+    try {
+      built = buildReceipt(raw, { keyPair });
+    } catch (e) {
+      if (e instanceof BuildBlockedError) { console.error(`skip ${f} — ${e.message}`); continue; }
+      throw e;
+    }
+    const verify = verifyReceipt(built.receipt, raw.artifactPath, { trustedIssuer: keyPair.publicKey });
+    entries.push({ receipt: built.receipt, verify });
+    maker = built.receipt.subject.maker;
+  }
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(resolve(outDir, "profile.html"), renderProfile(maker, entries));
+  const verified = entries.filter((e) => e.verify.ok).length;
+  console.log(`built → ${outDir}/profile.html — ${verified}/${entries.length} verified credentials for @${maker}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "build") cmdBuild();
 else if (cmd === "verify") cmdVerify();
+else if (cmd === "profile") cmdProfile();
 else {
-  console.error("usage: tsx src/cli.ts <build|verify> [--fixture f] [--out d] [--receipt r] [--artifact a] [--issuer b64] [--local-preview]");
+  console.error("usage: tsx src/cli.ts <build|verify|profile> [--fixture f] [--fixtures a,b,c] [--out d] [--receipt r] [--artifact a] [--issuer b64] [--local-preview]");
   process.exitCode = 2;
 }

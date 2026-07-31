@@ -1,4 +1,5 @@
 {
+  "maker": "psyto",
   "job": { "id": "fix-classify-zero", "category": "bugfix-typescript", "domain": "backend" },
   "artifactKind": "swe",
   "artifactPath": "fixtures/swe-bundle",

@@ -36,6 +36,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
   const capsule = opts.capsule ?? { id: label(raw.job.id, "job.id"), version: "1" };
   assertCapsule(capsule);
+  const subject = { maker: label(raw.maker ?? "unknown", "maker") };
 
   // Free-text public labels are redacted AND bounded (see publish-guard).
   const toolsUsed = dedupe(raw.events.flatMap((e) => (e.tool ? [label(e.tool, "event.tool")] : [])));
@@ -58,6 +59,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
   const unsigned: Omit<Receipt, "signature"> = {
     schema: "ccap.receipt/v0",
+    subject,
     capsule,
     conditions,
     toolsUsed,

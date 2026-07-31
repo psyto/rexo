@@ -44,3 +44,29 @@ describe("renderLocalComparison (device-only)", () => {
     expect(html).toContain("端末内でのみ閲覧");
   });
 });
+
+describe("renderProfile (verified track record / résumé)", () => {
+  it("aggregates multiple credentials under one maker with roll-up stats", async () => {
+    const { buildReceipt } = await import("../src/receipt/build.js");
+    const { verifyReceipt } = await import("../src/receipt/verify.js");
+    const { renderProfile } = await import("../src/receipt/render.js");
+    const kp = keyPair;
+    const fixtures = ["raw-trace-reckn-r1.json", "raw-trace-swe.json", "raw-trace-contract.json"];
+    const entries = fixtures.map((f) => {
+      const rt = JSON.parse(readFileSync(resolve("fixtures", f), "utf8")) as RawTrace;
+      const b = buildReceipt(rt, { keyPair: kp });
+      const v = verifyReceipt(b.receipt, rt.artifactPath, { trustedIssuer: kp.publicKey });
+      return { receipt: b.receipt, verify: v };
+    });
+    const html = renderProfile("psyto", entries);
+    expect(html).toContain("Verified Track Record");
+    expect(html).toContain("@psyto");
+    expect(html).toContain("検証済みクレデンシャル");
+    expect(html).toContain("証明された修正");
+    // three swe fixes, all verified, zero regressions in the roll-up
+    expect(entries.every((e) => e.verify.ok)).toBe(true);
+    // no secret leaks into the aggregated page
+    expect(html).not.toContain("sk-proj");
+    expect(html).not.toContain("sk-ant");
+  });
+});

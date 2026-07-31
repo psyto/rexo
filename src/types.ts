@@ -38,6 +38,8 @@ export interface RawTrace {
   events: RawEvent[];
   /** Raw client inputs (brief, copy, assets). Secret-capable. */
   inputs?: Array<{ kind: string; rawText?: string }>;
+  /** The maker this job's credential belongs to (a handle). Binds it to a résumé. */
+  maker?: string;
   /** Which recompute adapter to use. Defaults to "web". */
   artifactKind?: ArtifactKind;
   /** Local path to the delivered artifact: a file (web) or a bundle dir (swe). */
@@ -83,6 +85,8 @@ export type DurationBand = "<1m" | "1–10m" | "10–60m" | ">1h" | "unknown";
 
 export interface Receipt {
   schema: "ccap.receipt/v0";
+  /** The maker whose track record this credential belongs to. */
+  subject: { maker: string };
   capsule: { id: string; version: string };
   conditions: {
     category: string;

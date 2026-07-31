@@ -1,4 +1,5 @@
 {
+  "maker": "psyto",
   "job": { "id": "remediate-ltv-bypass", "category": "smart-contract-remediation", "domain": "defi" },
   "artifactKind": "swe",
   "artifactPath": "fixtures/contract-bundle",

@@ -56,6 +56,20 @@ const CSS = `
   pre.secret { background: var(--bad-bg); border: 1px solid var(--bad); border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-word; margin: 6px 0; font-size: 12px; }
   .findings { max-width: 780px; margin: 14px auto 0; font-size: 13px; color: var(--muted); }
   code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  /* profile / résumé */
+  .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 0 0 22px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .tile .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tile .n.good { color: var(--good); }
+  .tile .t { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .entry { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .entry .tick { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--good-bg); color: var(--good); }
+  .entry .tick.no { background: var(--bad-bg); color: var(--bad); }
+  .entry .body { flex: 1 1 auto; min-width: 0; }
+  .entry .title { font-weight: 650; }
+  .entry .sub { font-size: 12px; color: var(--muted); }
+  .entry .headline { font-size: 13px; font-weight: 650; white-space: nowrap; }
 `;
 
 const LABELS: Record<string, string> = {
@@ -121,7 +135,7 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
     <div class="crown">
       <div class="seal ${verify.ok ? "" : "bad"}">${verify.ok ? "✓" : "!"}</div>
       <div>
-        <div class="kicker">Verified Execution Credential</div>
+        <div class="kicker">Verified Execution Credential · @${esc(receipt.subject.maker)}</div>
         <h1>${cat}${dom}</h1>
       </div>
     </div>
@@ -183,6 +197,70 @@ export function renderLocalComparison(args: {
      <div class="wrap"><div class="cred">${credentialBody(receipt, verify)}</div></div>
      <div class="findings"><b>剥がした秘密（位置のみ・値は残さない）</b><ul>${findingRows}</ul></div>`,
   );
+}
+
+export interface ProfileEntry {
+  receipt: Receipt;
+  verify: VerificationResult;
+}
+
+/**
+ * SAFE TO SHARE. A maker's verified track record: many credentials aggregated
+ * under one identity with roll-up stats — this is what reads as a résumé (職歴),
+ * versus a single-job certificate. Renders only from redacted receipts.
+ */
+export function renderProfile(maker: string, entries: ProfileEntry[]): string {
+  const n = entries.length;
+  const verified = entries.filter((e) => e.verify.ok).length;
+  const categories = [...new Set(entries.map((e) => e.receipt.conditions.category))];
+  const factsRecomputed = entries.reduce((s, e) => s + e.receipt.metrics.machineRecomputed.length, 0);
+
+  const swe = entries.filter((e) => e.receipt.artifact.kind === "swe");
+  const fixesProven = swe.filter((e) => metricVal(e.receipt, "target_test_passes") === true).length;
+  const regressions = swe.reduce((s, e) => s + Number(metricVal(e.receipt, "regressions") ?? 0), 0);
+
+  const tile = (num: string, label: string, good = false) =>
+    `<div class="tile"><div class="n ${good ? "good" : ""}">${num}</div><div class="t">${esc(label)}</div></div>`;
+
+  const stats = [
+    tile(String(n), "検証済みクレデンシャル"),
+    tile(`${verified}/${n}`, "独立に検証済み", verified === n),
+    tile(String(fixesProven), "証明された修正 (SWE)"),
+    tile(String(regressions), "回帰の合計", regressions === 0),
+    tile(String(factsRecomputed), "再計算された事実"),
+  ].join("");
+
+  const rows = entries
+    .map((e) => {
+      const r = e.receipt;
+      const ok = e.verify.ok;
+      const headline =
+        r.artifact.kind === "swe"
+          ? `対象通過 ${metricVal(r, "target_test_passes") ? "✓" : "✗"} · ${metricVal(r, "tests_passed")}/${Number(metricVal(r, "tests_passed") ?? 0) + Number(metricVal(r, "tests_failed") ?? 0)} · 回帰${metricVal(r, "regressions")}`
+          : `品質チェック ${r.metrics.machineRecomputed.length} 項目`;
+      return `<div class="entry">
+        <div class="tick ${ok ? "" : "no"}">${ok ? "✓" : "✗"}</div>
+        <div class="body"><div class="title">${esc(r.conditions.category)}</div><div class="sub">${esc(r.artifact.kind)} · ${r.execution.revisions} rev · ${esc(r.execution.costBand)} / ${esc(r.execution.durationBand)}</div></div>
+        <div class="headline">${esc(headline)}</div>
+      </div>`;
+    })
+    .join("");
+
+  const body = `<div class="wrap">
+    <div class="phead">
+      <div class="seal ${verified === n ? "" : "bad"}">✓</div>
+      <div><div class="kicker">Verified Track Record</div><h1>@${esc(maker)}</h1></div>
+    </div>
+    <p class="hero">独立検証者が各成果物を<b>再計算チェック</b>した実行実績。すべて第三者が再検証でき、顧客データと専有ソースは含まれません。</p>
+    <div class="stats">${stats}</div>
+    <h2>クレデンシャル一覧（${esc(categories.join(" · "))}）</h2>
+    ${rows}
+  </div>`;
+  return page(`Track Record — @${esc(maker)}`, body);
+}
+
+function metricVal(r: Receipt, name: string): number | string | boolean | undefined {
+  return r.metrics.machineRecomputed.find((m) => m.name === name)?.value;
 }
 
 function page(title: string, body: string): string {
