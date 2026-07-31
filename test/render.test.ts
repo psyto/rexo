@@ -28,9 +28,12 @@ describe("renderPublishedReceipt (safe to share)", () => {
   it("does not embed any raw event/input text", () => {
     expect(html).not.toContain("<pre class=\"secret\">");
   });
-  it("still shows the verified metrics and badges", () => {
-    expect(html).toContain("機械再計算メトリクス");
-    expect(html).toContain("issuer trusted");
+  it("reads as a credential: verified quality signals, framed, not a linter dump", () => {
+    expect(html).toContain("Verified Execution Credential");
+    expect(html).toContain("独立に再計算された品質");
+    expect(html).toContain("顧客データ露出");
+    // humanized metric label, not the raw metric name
+    expect(html).toContain("画像 alt 網羅率");
   });
 });
 
