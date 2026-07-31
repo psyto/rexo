@@ -1,6 +1,10 @@
 node_modules/
 out/
 *.log
+# foundry (onchain PoC)
+onchain/out/
+onchain/cache/
+onchain/broadcast/
 .DS_Store
 # never commit device-local secrets / raw traces
 *.local.json

@@ -13,7 +13,8 @@
     "profile": "tsx src/cli.ts profile",
     "verify:receipt": "tsx src/cli.ts verify",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "onchain:test": "cd onchain && forge test -vv"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
