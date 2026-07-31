@@ -1,0 +1,21 @@
+{
+  "job": { "id": "reckn-r1-basefee-nonce", "category": "evm-reexec-bugfix", "domain": "evm" },
+  "artifactKind": "swe",
+  "artifactPath": "fixtures/reckn-r1-bundle",
+  "events": [
+    {
+      "kind": "llm_call",
+      "tool": "claude-opus",
+      "rawText": "psyto/reckn reexec-evm: replay set gas_price=0 with base-fee/nonce checks ON. Against a real anchor (base_fee>0) or real caller (nonce>0), revm rejected the tx pre-execution (GasPriceLessThanBasefee / NonceMismatch) and the verdict collapsed to Failed(Execution) — a wrongful refund of an honest seller. base_fee=0/nonce=0 fixtures had masked it.",
+      "costUsd": 0.48,
+      "durationMs": 360000
+    },
+    { "kind": "edit", "summary": "replay cfg で disable_base_fee + disable_nonce_check を設定（balance は維持）", "durationMs": 150000 },
+    { "kind": "eval", "tool": "cargo-test", "summary": "base_fee=1gwei/nonce=7 の回帰テストを追加し全テスト再実行", "durationMs": 40000 }
+  ],
+  "inputs": [
+    { "kind": "review-finding", "rawText": "R1（CC cross-pass / MPT milestone、origin=初期 reexec-evm の gas_price=0）" }
+  ],
+  "attestedMetrics": [],
+  "revisions": 1
+}

@@ -101,3 +101,13 @@ describe("recompute swe — contract remediation (same adapter)", () => {
     expect(check("regressions", r.checks)).toBe(0);
   });
 });
+
+describe("recompute swe — real example: reckn R1 fix", () => {
+  it("re-runs the R1 regression + invariants against the committed fix", () => {
+    const r = recompute("swe", "fixtures/reckn-r1-bundle");
+    // target = honest delivery reproduces under real base_fee/nonce (was Failed pre-fix)
+    expect(check("target_test_passes", r.checks)).toBe(true);
+    expect(check("tests_passed", r.checks)).toBe(4);
+    expect(check("regressions", r.checks)).toBe(0);
+  });
+});
