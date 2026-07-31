@@ -1,5 +1,29 @@
 # Phase 0 — Maker demand test (how-to)
 
+> **Recommended beachhead: AI software engineering (SWE), not web production.**
+> A beachhead scoring (docs/05 round-3 note / memory) ranked AI-SWE bug-fix/PR
+> credentials well above web production, because the value survives redaction:
+> you commit a bundle hash + recomputed test results, never the proprietary
+> source. The engine is domain-agnostic — only the recompute adapter differs.
+>
+> **SWE demo (verifier actually re-runs the committed test suite):**
+> ```
+> npx tsx src/cli.ts build  --fixture fixtures/raw-trace-swe.json
+> npx tsx src/cli.ts verify --receipt out/receipt.json --artifact fixtures/swe-bundle
+> ```
+> The receipt proves: "target test `classifies zero` now passes, 5/5 tests pass,
+> 0 regressions" — independently recomputed by re-executing `fixtures/swe-bundle`.
+>
+> To make your own SWE bundle, mirror `fixtures/swe-bundle/`:
+> - `solution.mjs` — the delivered code (committed, hashed, never published)
+> - `tests.mjs` — the committed suite, `export const tests = [{ name, run }]`
+> - `bundle.json` — `{ "target": "<the once-failing test>", "baseline": { "<name>": <passed-before?> } }`
+>
+> The web flow below is the fallback beachhead.
+
+---
+
+
 Goal: from **one real AI-assisted web job**, produce a **publish-safe verified
 receipt**, show it to ~10 makers, and learn whether a redacted receipt is a
 "worth-showing-to-win-work" asset — or empty once the client secrets are gone.

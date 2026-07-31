@@ -38,7 +38,9 @@ export interface RawTrace {
   events: RawEvent[];
   /** Raw client inputs (brief, copy, assets). Secret-capable. */
   inputs?: Array<{ kind: string; rawText?: string }>;
-  /** Local path to the delivered artifact (e.g. built site index.html). */
+  /** Which recompute adapter to use. Defaults to "web". */
+  artifactKind?: ArtifactKind;
+  /** Local path to the delivered artifact: a file (web) or a bundle dir (swe). */
   artifactPath: string;
   /** Outcome metrics the client attests to. Carried as low-trust. */
   attestedMetrics?: AttestedMetric[];
@@ -66,8 +68,12 @@ export interface MachineMetric {
   method: string;
 }
 
+export type ArtifactKind = "web" | "swe";
+
 export interface ArtifactCommitment {
-  /** sha256 of the delivered artifact bytes. */
+  /** Which recompute adapter produced/validates this. Self-describing for verify. */
+  kind: ArtifactKind;
+  /** sha256 of the committed artifact bytes (single file, or the swe bundle). */
   commitment: string;
   checks: MachineMetric[];
 }

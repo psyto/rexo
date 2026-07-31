@@ -1,0 +1,10 @@
+{
+  "target": "classifies zero",
+  "baseline": {
+    "adds two numbers": true,
+    "adds negatives": true,
+    "classifies positive": true,
+    "classifies zero": false,
+    "classifies negative": true
+  }
+}

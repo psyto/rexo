@@ -1,6 +1,6 @@
 import type { RawTrace, Receipt, CostBand, DurationBand, Finding, AttestedMetric } from "../types.js";
 import { redactTrace } from "../redact/redact.js";
-import { recomputeArtifact } from "../verify/recompute.js";
+import { recompute } from "../verify/recompute.js";
 import { canonicalize } from "../canonical.js";
 import { scan } from "../redact/scanner.js";
 import { PrivacyGateError, assertIssuedAt, assertCapsule, label } from "../publish-guard.js";
@@ -32,7 +32,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
   // redactTrace validates event kinds (enum) and bounds tool/input labels.
   const { published, inputKinds, findings } = redactTrace(raw);
-  const artifact = recomputeArtifact(raw.artifactPath);
+  const artifact = recompute(raw.artifactKind ?? "web", raw.artifactPath);
 
   const capsule = opts.capsule ?? { id: label(raw.job.id, "job.id"), version: "1" };
   assertCapsule(capsule);

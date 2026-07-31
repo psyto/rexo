@@ -59,13 +59,22 @@ const CSS = `
 `;
 
 const LABELS: Record<string, string> = {
+  // web
   has_title: "タイトル設定",
   has_viewport_meta: "レスポンシブ (viewport)",
   has_lang_attr: "言語属性 (a11y)",
   h1_count: "見出し H1",
   img_alt_coverage: "画像 alt 網羅率",
   relative_asset_refs: "相対アセット参照",
+  // swe
+  target_test_passes: "対象テスト通過",
+  tests_passed: "通過テスト",
+  tests_failed: "失敗テスト",
+  pass_rate: "通過率",
+  regressions: "回帰",
 };
+
+const HERO_VERB: Record<string, string> = { web: "を制作", swe: "を実装・修正" };
 
 function fmtMetric(m: MachineMetric): { text: string; cls: string } {
   if (typeof m.value === "boolean") return { text: m.value ? "✓" : "✗", cls: m.value ? "yes" : "no" };
@@ -116,7 +125,7 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
         <h1>${cat}${dom}</h1>
       </div>
     </div>
-    <p class="hero">AI 支援で <b>${cat}</b> を制作。独立検証者が成果物を<b>再計算チェック</b>済み。顧客データは受領内に留まり、この証明には含まれません。</p>
+    <p class="hero">AI 支援で <b>${cat}</b> ${esc(HERO_VERB[receipt.artifact.kind] ?? "を遂行")}。独立検証者が成果物を<b>再計算チェック</b>済み。顧客データは受領内に留まり、この証明には含まれません。</p>
 
     <div class="facts">${facts}</div>
 

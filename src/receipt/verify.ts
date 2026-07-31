@@ -1,7 +1,7 @@
 import type { Receipt, MachineMetric } from "../types.js";
 import { canonicalize } from "../canonical.js";
 import { verifyMessage } from "../crypto.js";
-import { recomputeArtifact } from "../verify/recompute.js";
+import { recompute } from "../verify/recompute.js";
 import { scan } from "../redact/scanner.js";
 
 export interface CheckMismatch {
@@ -62,7 +62,7 @@ export function verifyReceipt(
   // 3. Independently recompute the artifact and compare BOTH claimed arrays —
   //    the one that's committed (artifact.checks) and the one that's displayed
   //    as "strong" (metrics.machineRecomputed). Both must equal the truth.
-  const fresh = recomputeArtifact(artifactPath);
+  const fresh = recompute(receipt.artifact.kind, artifactPath);
   const artifactMatch = fresh.commitment === receipt.artifact.commitment;
   const checkMismatches = [
     ...diffChecks(fresh.checks, receipt.artifact.checks, "artifact.checks"),
