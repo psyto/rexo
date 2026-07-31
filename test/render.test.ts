@@ -58,9 +58,10 @@ describe("renderProfile (verified track record / résumé)", () => {
       const v = verifyReceipt(b.receipt, rt.artifactPath, { trustedIssuer: kp.publicKey });
       return { receipt: b.receipt, verify: v };
     });
-    const html = renderProfile("psyto", entries);
+    const html = renderProfile(entries);
     expect(html).toContain("Verified Track Record");
-    expect(html).toContain("@psyto");
+    expect(html).toContain("Agent @aegis-swe"); // the AGENT is the subject
+    expect(html).toContain("operated by @psyto"); // human operator = metadata
     expect(html).toContain("Experience"); // résumé section
     expect(html).toContain("証明された修正");
     expect(html).toContain("独立に検証済み"); // per-entry verified line

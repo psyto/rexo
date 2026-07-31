@@ -1,5 +1,6 @@
 {
-  "maker": "psyto",
+  "agent": "aegis-swe",
+  "operator": "psyto",
   "job": {
     "id": "remediate-ltv-bypass",
     "category": "smart-contract-remediation",

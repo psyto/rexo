@@ -36,7 +36,11 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
 
   const capsule = opts.capsule ?? { id: label(raw.job.id, "job.id"), version: "1" };
   assertCapsule(capsule);
-  const subject = { maker: label(raw.maker ?? "unknown", "maker") };
+  const subject = {
+    kind: "agent" as const,
+    agentId: label(raw.agent ?? "unknown", "agent"),
+    ...(raw.operator ? { operator: label(raw.operator, "operator") } : {}),
+  };
 
   // Free-text public labels are redacted AND bounded (see publish-guard).
   const toolsUsed = dedupe(raw.events.flatMap((e) => (e.tool ? [label(e.tool, "event.tool")] : [])));

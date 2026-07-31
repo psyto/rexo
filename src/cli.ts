@@ -147,7 +147,7 @@ function cmdProfile(): void {
   )!.split(",").map((s) => s.trim());
   const keyPair = loadKey();
   const entries: ProfileEntry[] = [];
-  let maker = "unknown";
+  let agentId = "unknown";
   for (const f of fixtures) {
     const raw = JSON.parse(readFileSync(resolve(f), "utf8")) as RawTrace;
     let built;
@@ -159,12 +159,12 @@ function cmdProfile(): void {
     }
     const verify = verifyReceipt(built.receipt, raw.artifactPath, { trustedIssuer: keyPair.publicKey });
     entries.push({ receipt: built.receipt, verify });
-    maker = built.receipt.subject.maker;
+    agentId = built.receipt.subject.agentId;
   }
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(resolve(outDir, "profile.html"), renderProfile(maker, entries));
+  writeFileSync(resolve(outDir, "profile.html"), renderProfile(entries));
   const verified = entries.filter((e) => e.verify.ok).length;
-  console.log(`built → ${outDir}/profile.html — ${verified}/${entries.length} verified credentials for @${maker}`);
+  console.log(`built → ${outDir}/profile.html — ${verified}/${entries.length} verified credentials for agent @${agentId}`);
 }
 
 const cmd = process.argv[2];

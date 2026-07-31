@@ -1,5 +1,6 @@
 {
-  "maker": "psyto",
+  "agent": "aegis-swe",
+  "operator": "psyto",
   "job": {
     "id": "reckn-r1-basefee-nonce",
     "category": "evm-reexec-bugfix",

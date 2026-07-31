@@ -1,5 +1,6 @@
 {
-  "maker": "psyto",
+  "agent": "aegis-swe",
+  "operator": "psyto",
   "job": {
     "id": "fix-classify-zero",
     "category": "bugfix-typescript",

@@ -103,8 +103,6 @@ const LABELS: Record<string, string> = {
   regressions: "回帰",
 };
 
-const HERO_VERB: Record<string, string> = { web: "を制作", swe: "を実装・修正" };
-
 function fmtMetric(m: MachineMetric): { text: string; cls: string } {
   if (typeof m.value === "boolean") return { text: m.value ? "✓" : "✗", cls: m.value ? "yes" : "no" };
   if (m.unit === "ratio") return { text: `${Math.round(Number(m.value) * 100)}%`, cls: "" };
@@ -112,9 +110,8 @@ function fmtMetric(m: MachineMetric): { text: string; cls: string } {
 }
 
 function credentialBody(receipt: Receipt, verify: VerificationResult): string {
-  const cat = esc(receipt.conditions.category);
   const facts = [
-    ["使用ツール", receipt.toolsUsed.map(esc).join(", ") || "—", ""],
+    ["モデル/ツール", receipt.toolsUsed.map(esc).join(", ") || "—", ""],
     ["改訂回数", String(receipt.execution.revisions), ""],
     ["コスト帯", esc(receipt.execution.costBand), ""],
     ["所要時間帯", esc(receipt.execution.durationBand), ""],
@@ -148,11 +145,11 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
     <div class="crown">
       <div class="seal ${verify.ok ? "" : "bad"}">${verify.ok ? "✓" : "!"}</div>
       <div>
-        <div class="kicker">Verified Execution Credential · @${esc(receipt.subject.maker)}</div>
+        <div class="kicker">Verified Execution Credential · agent @${esc(receipt.subject.agentId)}${receipt.subject.operator ? ` · op @${esc(receipt.subject.operator)}` : ""}</div>
         <h1>${esc(receipt.title ?? receipt.conditions.category)}</h1>
       </div>
     </div>
-    <p class="hero">AI 支援で <b>${cat}</b> ${esc(HERO_VERB[receipt.artifact.kind] ?? "を遂行")}。独立検証者が成果物を<b>再計算チェック</b>済み。顧客データは受領内に留まり、この証明には含まれません。</p>
+    <p class="hero">エージェント <b>@${esc(receipt.subject.agentId)}</b> が <b>${esc(receipt.title ?? receipt.conditions.category)}</b> を遂行。独立検証者が成果物を<b>再計算チェック</b>済み。顧客データは受領内に留まり、この証明には含まれません。</p>
 
     <div class="facts">${facts}</div>
 
@@ -222,7 +219,10 @@ export interface ProfileEntry {
  * under one identity with roll-up stats — this is what reads as a résumé (職歴),
  * versus a single-job certificate. Renders only from redacted receipts.
  */
-export function renderProfile(maker: string, entries: ProfileEntry[]): string {
+export function renderProfile(entries: ProfileEntry[]): string {
+  const subj = entries[0]?.receipt.subject;
+  const agentId = subj?.agentId ?? "unknown";
+  const operator = subj?.operator;
   const n = entries.length;
   const verified = entries.filter((e) => e.verify.ok).length;
   const swe = entries.filter((e) => e.receipt.artifact.kind === "swe");
@@ -237,7 +237,7 @@ export function renderProfile(maker: string, entries: ProfileEntry[]): string {
     (b.receipt.completedAt ?? "").localeCompare(a.receipt.completedAt ?? ""),
   );
 
-  const mono = (maker.slice(0, 2) || "?").toUpperCase();
+  const mono = (agentId.slice(0, 2) || "?").toUpperCase();
   const hi = (num: string, l: string, good = false) =>
     `<div><div class="h ${good ? "good" : ""}">${esc(num)}</div><div class="l">${esc(l)}</div></div>`;
 
@@ -266,9 +266,9 @@ export function renderProfile(maker: string, entries: ProfileEntry[]): string {
       <div class="banner"></div>
       <div class="pad">
         <div class="avatar">${esc(mono)}</div>
-        <div class="name">@${esc(maker)} <span class="verbadge">✓ Verified</span></div>
-        <div class="headline2">AI 支援エンジニアリング — 検証済み実行実績</div>
-        <div class="metaline">独立検証者が各成果物を再実行チェック · 顧客データ / 専有ソース非公開${domains.length ? " · " + domains.map(esc).join(" / ") : ""}</div>
+        <div class="name">Agent @${esc(agentId)} <span class="verbadge">✓ Verified</span></div>
+        <div class="headline2">自律 AI エージェント — 検証済み実行実績（職歴）</div>
+        <div class="metaline">${operator ? `operated by @${esc(operator)} · ` : ""}独立検証者が各成果物を再実行チェック · 顧客データ / 専有ソース非公開${domains.length ? " · " + domains.map(esc).join(" / ") : ""}</div>
         <div class="hi">
           ${hi(String(n), "検証済み実績")}
           ${hi(`${verified}/${n}`, "独立検証", verified === n)}
@@ -285,7 +285,7 @@ export function renderProfile(maker: string, entries: ProfileEntry[]): string {
       ${xps}
     </div>
   </div>`;
-  return page(`@${esc(maker)} — Verified Track Record`, body);
+  return page(`Agent @${esc(agentId)} — Verified Track Record`, body);
 }
 
 const CATEGORY_JA: Record<string, string> = {
