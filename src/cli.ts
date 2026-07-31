@@ -46,10 +46,10 @@ function writePrivate(path: string, data: string): void {
   try { chmodSync(path, 0o600); } catch { /* non-POSIX FS */ }
 }
 
-/** Verifier keypair lives ONLY in vault/, owner-readable, never in out/. */
-function loadKey(): KeyPair {
+/** A private keypair that lives ONLY in vault/, owner-readable, never in out/. */
+function loadVaultKey(name: string): KeyPair {
   ensurePrivateDir(VAULT);
-  const keyPath = resolve(VAULT, "verifier-key.json");
+  const keyPath = resolve(VAULT, name);
   if (existsSync(keyPath)) {
     rejectSymlink(keyPath);
     try { chmodSync(keyPath, 0o600); } catch { /* non-POSIX FS */ }
@@ -59,16 +59,19 @@ function loadKey(): KeyPair {
   writePrivate(keyPath, JSON.stringify(kp, null, 2));
   return kp;
 }
+const loadKey = () => loadVaultKey("verifier-key.json"); // independent verifier
+const loadAgentKey = () => loadVaultKey("agent-key.json"); // the agent's identity
 
 function cmdBuild(): void {
   const fixture = arg("--fixture", "fixtures/raw-trace.json")!;
   const outDir = arg("--out", "out")!;
   const raw = JSON.parse(readFileSync(resolve(fixture), "utf8")) as RawTrace;
   const keyPair = loadKey();
+  const agentKeyPair = loadAgentKey();
 
   let result;
   try {
-    result = buildReceipt(raw, { keyPair });
+    result = buildReceipt(raw, { keyPair, agentKeyPair });
   } catch (e) {
     if (e instanceof BuildBlockedError) {
       console.error(`BUILD BLOCKED — ${e.message}`);
@@ -80,7 +83,10 @@ function cmdBuild(): void {
   }
   const { receipt, salt, findings } = result;
 
-  const verify = verifyReceipt(receipt, raw.artifactPath, { trustedIssuer: keyPair.publicKey });
+  const verify = verifyReceipt(receipt, raw.artifactPath, {
+    trustedIssuer: keyPair.publicKey,
+    trustedAgent: agentKeyPair.publicKey,
+  });
   if (!verify.privacyClean) {
     console.error("BUILD BLOCKED — privacy check failed post-build. no receipt written to out/.");
     process.exitCode = 1;
@@ -119,8 +125,9 @@ function cmdVerify(): void {
     if (existsSync(keyPath)) trustedIssuer = (JSON.parse(readFileSync(keyPath, "utf8")) as KeyPair).publicKey;
   }
   if (!trustedIssuer) console.error("note: no --issuer trust anchor supplied → issuer cannot be trusted");
+  const trustedAgent = arg("--agent"); // optional: pin the expected agent identity key
 
-  const result = verifyReceipt(receipt, artifact, { trustedIssuer, rawJson });
+  const result = verifyReceipt(receipt, artifact, { trustedIssuer, trustedAgent, rawJson });
   console.log(printVerify(result));
   if (!result.ok) process.exitCode = 1;
 }
@@ -129,8 +136,10 @@ function printVerify(v: VerificationResult): string {
   const b = (ok: boolean) => (ok ? "PASS" : "FAIL");
   return [
     `verification: ${v.ok ? "OK" : "FAILED"}`,
-    `  signature      ${b(v.signatureValid)}`,
+    `  verifier sig   ${b(v.signatureValid)}`,
     `  issuer trusted ${b(v.issuerTrusted)}`,
+    `  agent sig      ${b(v.agentSignatureValid)}`,
+    `  agent identity ${b(v.agentTrusted)}`,
     `  artifact match ${b(v.artifactMatch)}`,
     `  machine checks ${b(v.checkMismatches.length === 0)}${v.checkMismatches.length ? " — " + v.checkMismatches.map((m) => `${m.field}:${m.name}`).join(", ") : ""}`,
     `  canonical wire ${b(v.canonicalWire)}`,
@@ -146,18 +155,22 @@ function cmdProfile(): void {
     "fixtures/raw-trace-reckn-r1.json,fixtures/raw-trace-contract.json,fixtures/raw-trace-swe.json,fixtures/raw-trace.json",
   )!.split(",").map((s) => s.trim());
   const keyPair = loadKey();
+  const agentKeyPair = loadAgentKey(); // one identity across all of this agent's jobs
   const entries: ProfileEntry[] = [];
   let agentId = "unknown";
   for (const f of fixtures) {
     const raw = JSON.parse(readFileSync(resolve(f), "utf8")) as RawTrace;
     let built;
     try {
-      built = buildReceipt(raw, { keyPair });
+      built = buildReceipt(raw, { keyPair, agentKeyPair });
     } catch (e) {
       if (e instanceof BuildBlockedError) { console.error(`skip ${f} — ${e.message}`); continue; }
       throw e;
     }
-    const verify = verifyReceipt(built.receipt, raw.artifactPath, { trustedIssuer: keyPair.publicKey });
+    const verify = verifyReceipt(built.receipt, raw.artifactPath, {
+      trustedIssuer: keyPair.publicKey,
+      trustedAgent: agentKeyPair.publicKey,
+    });
     entries.push({ receipt: built.receipt, verify });
     agentId = built.receipt.subject.agentId;
   }

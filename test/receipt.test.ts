@@ -28,12 +28,15 @@ const PLANTED = [
   "03-1234-5678",
 ];
 
-// re-sign a mutated receipt with the SAME issuer key (simulates a malicious
-// issuer / self-signer) so signature checks pass and the verify-layer logic is
+// Fully re-sign a mutated receipt (both the verifier and the agent signatures)
+// with the SAME keys, so signature checks pass and the verify-layer logic is
 // what's under test.
 function reSign(r: Receipt): Receipt {
-  const { signature: _drop, ...unsigned } = r;
-  return { ...unsigned, signature: signMessage(canonicalize(unsigned), keyPair.privateKey) };
+  const { signature: _s, agentSignature: _a, ...core } = r;
+  const signature = signMessage(canonicalize(core), keyPair.privateKey);
+  const withV = { ...core, signature };
+  const agentSignature = signMessage(canonicalize(withV), built.agentKeyPair.privateKey);
+  return { ...withV, agentSignature };
 }
 
 describe("receipt build + verify", () => {
@@ -62,6 +65,28 @@ describe("receipt build + verify", () => {
     expect(built.receipt.metrics.machineRecomputed.every((m) => m.source === "recomputed")).toBe(true);
     const cvr = built.receipt.metrics.clientAttested.find((m) => m.name === "CVR");
     expect(cvr?.trust).toBe("low");
+  });
+
+  // anti-impersonation: the credential is bound to the agent's own key --------
+  it("binds the credential to the agent's own key (valid authorship)", () => {
+    const v = verifyReceipt(built.receipt, ART, { trustedIssuer: ISSUER, trustedAgent: built.agentKeyPair.publicKey });
+    expect(v.agentSignatureValid).toBe(true);
+    expect(v.agentTrusted).toBe(true);
+    expect(v.ok).toBe(true);
+  });
+  it("cannot be re-homed onto a different agent identity", () => {
+    const other = generateVerifierKey();
+    const t = structuredClone(built.receipt);
+    t.subject.agentKey = other.publicKey; // claim it's someone else's work
+    const forged = reSign(t); // signed by the real agent key, not `other`
+    const v = verifyReceipt(forged, ART, { trustedIssuer: ISSUER });
+    expect(v.agentSignatureValid).toBe(false); // agent sig ≠ the claimed key
+    expect(v.ok).toBe(false);
+  });
+  it("rejects a receipt whose agentKey is not the expected agent", () => {
+    const v = verifyReceipt(built.receipt, ART, { trustedIssuer: ISSUER, trustedAgent: generateVerifierKey().publicKey });
+    expect(v.agentTrusted).toBe(false);
+    expect(v.ok).toBe(false);
   });
 
   // ---- finding #6: self-signed receipts need an out-of-band trust anchor ----

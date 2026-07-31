@@ -91,9 +91,10 @@ export type DurationBand = "<1m" | "1–10m" | "10–60m" | ">1h" | "unknown";
 
 export interface Receipt {
   schema: "ccap.receipt/v0";
-  /** The subject whose track record this credential belongs to — an AI agent,
-   *  with the operating human/org as metadata. */
-  subject: { kind: "agent"; agentId: string; operator?: string };
+  /** The subject whose track record this credential belongs to — an AI agent.
+   *  Identity is the KEY, not the handle: entries aggregate by `agentKey`, so a
+   *  credential can only be added to an agent's résumé by that key's holder. */
+  subject: { kind: "agent"; agentId: string; agentKey: string; operator?: string };
   capsule: { id: string; version: string };
   conditions: {
     category: string;
@@ -123,8 +124,13 @@ export interface Receipt {
   saltCommitment: string;
   issuedAt: string;
   issuedBy: { verifierPublicKey: string };
-  /** ed25519 over canonical(receipt without `signature`). */
+  /** Verifier's ed25519 over canonical(receipt without signatures). Attests the
+   *  independently recomputed facts. */
   signature: string;
+  /** Agent's ed25519 (subject.agentKey) over canonical(receipt without
+   *  agentSignature) — attests authorship, so the credential can't be forged
+   *  onto this agent's identity without its private key. */
+  agentSignature: string;
 }
 
 export interface Finding {

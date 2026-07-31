@@ -19,6 +19,8 @@ export interface VerifyOptions {
    * so `ok` cannot be true. See finding #6.
    */
   trustedIssuer?: string;
+  /** Optional expected agent key. If given, the receipt's agentKey must match it. */
+  trustedAgent?: string;
   /** Raw JSON bytes as received, scanned for secrets that a re-parse would hide. */
   rawJson?: string;
 }
@@ -27,6 +29,10 @@ export interface VerificationResult {
   signatureValid: boolean;
   /** The receipt's issuer key matches a trusted issuer supplied out-of-band. */
   issuerTrusted: boolean;
+  /** The agent's own signature over the receipt is valid (authorship — anti-impersonation). */
+  agentSignatureValid: boolean;
+  /** The receipt's agentKey matches an expected agent (only when trustedAgent given). */
+  agentTrusted: boolean;
   artifactMatch: boolean;
   /** Recomputed checks that disagree with either claimed array. */
   checkMismatches: CheckMismatch[];
@@ -47,13 +53,22 @@ export function verifyReceipt(
   artifactPath: string,
   opts: VerifyOptions = {},
 ): VerificationResult {
-  // 1. Signature over canonical(receipt without signature).
-  const { signature, ...unsigned } = receipt;
+  // 1. Verifier signature over canonical(receipt without either signature).
+  const { signature, agentSignature, ...unsigned } = receipt;
   const signatureValid = verifyMessage(
     canonicalize(unsigned),
     signature,
     receipt.issuedBy.verifierPublicKey,
   );
+
+  // 1b. Agent signature (authorship) over canonical(receipt without agentSignature),
+  //     against the agent key the receipt names — anti-impersonation.
+  const agentSignatureValid = verifyMessage(
+    canonicalize({ ...unsigned, signature }),
+    agentSignature,
+    receipt.subject.agentKey,
+  );
+  const agentTrusted = !opts.trustedAgent || opts.trustedAgent === receipt.subject.agentKey;
 
   // 2. Issuer authenticity: the signing key must be one we trust out-of-band.
   const issuerTrusted =
@@ -85,11 +100,23 @@ export function verifyReceipt(
   const ok =
     signatureValid &&
     issuerTrusted &&
+    agentSignatureValid &&
+    agentTrusted &&
     artifactMatch &&
     checkMismatches.length === 0 &&
     canonicalWire &&
     privacyClean;
-  return { signatureValid, issuerTrusted, artifactMatch, checkMismatches, privacyClean, canonicalWire, ok };
+  return {
+    signatureValid,
+    issuerTrusted,
+    agentSignatureValid,
+    agentTrusted,
+    artifactMatch,
+    checkMismatches,
+    privacyClean,
+    canonicalWire,
+    ok,
+  };
 }
 
 /**

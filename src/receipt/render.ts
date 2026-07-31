@@ -140,6 +140,7 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
 
   const chk = (label: string, ok: boolean) => `<span class="chk ${ok ? "" : "no"}">${ok ? "✓" : "✗"} ${esc(label)}</span>`;
   const fp = receipt.issuedBy.verifierPublicKey.slice(0, 16);
+  const afp = receipt.subject.agentKey.slice(0, 16);
 
   return `
     <div class="crown">
@@ -164,9 +165,9 @@ function credentialBody(receipt: Receipt, verify: VerificationResult): string {
 
     <div class="foot">
       <div class="checks">
-        ${chk("署名", verify.signatureValid)}${chk("発行者", verify.issuerTrusted)}${chk("成果物一致", verify.artifactMatch)}${chk("再計算一致", verify.checkMismatches.length === 0)}${chk("正規形", verify.canonicalWire)}${chk("秘密ゼロ", verify.privacyClean)}
+        ${chk("検証者署名", verify.signatureValid)}${chk("発行者", verify.issuerTrusted)}${chk("本人署名", verify.agentSignatureValid)}${chk("成果物一致", verify.artifactMatch)}${chk("再計算一致", verify.checkMismatches.length === 0)}${chk("正規形", verify.canonicalWire)}${chk("秘密ゼロ", verify.privacyClean)}
       </div>
-      <p style="margin:10px 0 0">検証者公開鍵 <span class="mono">${esc(fp)}…</span> — 第三者は <code>receipt.json</code> と成果物とこの鍵で全項目を独立に再検証できます。</p>
+      <p style="margin:10px 0 0">エージェント鍵 <span class="mono">${esc(afp)}…</span>（本人署名）· 検証者鍵 <span class="mono">${esc(fp)}…</span> — 第三者は <code>receipt.json</code> と成果物と両鍵で全項目を独立に再検証できます。</p>
     </div>`;
 }
 
@@ -223,6 +224,11 @@ export function renderProfile(entries: ProfileEntry[]): string {
   const subj = entries[0]?.receipt.subject;
   const agentId = subj?.agentId ?? "unknown";
   const operator = subj?.operator;
+  const agentKey = subj?.agentKey ?? "";
+  const agentFp = agentKey.slice(0, 16);
+  // Identity is the KEY: every entry must be signed by, and name, the same key.
+  const oneKey = agentKey !== "" && entries.every((e) => e.receipt.subject.agentKey === agentKey);
+  const authored = entries.filter((e) => e.verify.agentSignatureValid).length;
   const n = entries.length;
   const verified = entries.filter((e) => e.verify.ok).length;
   const swe = entries.filter((e) => e.receipt.artifact.kind === "swe");
@@ -255,7 +261,7 @@ export function renderProfile(entries: ProfileEntry[]): string {
           <div class="xptop"><div class="xptitle">${esc(title)}</div><div class="xpdate">${esc(date)}</div></div>
           <div class="xpsub">${sub}</div>
           <ul class="xpbul">${bullets}</ul>
-          <div class="xpver ${ok ? "" : "no"}">${ok ? "✓ 独立に検証済み（署名・成果物の再計算一致・正規形・秘密ゼロ）" : "✗ 未検証"}</div>
+          <div class="xpver ${ok ? "" : "no"}">${ok ? "✓ 独立に検証済み（検証者署名・本人署名・成果物の再計算一致・正規形・秘密ゼロ）" : "✗ 未検証"}</div>
         </div>
       </div>`;
     })
@@ -266,9 +272,10 @@ export function renderProfile(entries: ProfileEntry[]): string {
       <div class="banner"></div>
       <div class="pad">
         <div class="avatar">${esc(mono)}</div>
-        <div class="name">Agent @${esc(agentId)} <span class="verbadge">✓ Verified</span></div>
+        <div class="name">Agent @${esc(agentId)} <span class="verbadge">✓ Verified</span>${oneKey ? ` <span class="verbadge">🔑 Key-bound</span>` : ""}</div>
         <div class="headline2">自律 AI エージェント — 検証済み実行実績（職歴）</div>
         <div class="metaline">${operator ? `operated by @${esc(operator)} · ` : ""}独立検証者が各成果物を再実行チェック · 顧客データ / 専有ソース非公開${domains.length ? " · " + domains.map(esc).join(" / ") : ""}</div>
+        <div class="metaline">identity（鍵束縛）: <span class="mono">${esc(agentFp)}…</span> · ${authored}/${n} 件をこの鍵が署名（本人証明・なりすまし不可）</div>
         <div class="hi">
           ${hi(String(n), "検証済み実績")}
           ${hi(`${verified}/${n}`, "独立検証", verified === n)}

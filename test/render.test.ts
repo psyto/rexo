@@ -51,20 +51,23 @@ describe("renderProfile (verified track record / résumé)", () => {
     const { verifyReceipt } = await import("../src/receipt/verify.js");
     const { renderProfile } = await import("../src/receipt/render.js");
     const kp = keyPair;
+    const agentKeyPair = (await import("../src/crypto.js")).generateVerifierKey();
     const fixtures = ["raw-trace-reckn-r1.json", "raw-trace-swe.json", "raw-trace-contract.json"];
     const entries = fixtures.map((f) => {
       const rt = JSON.parse(readFileSync(resolve("fixtures", f), "utf8")) as RawTrace;
-      const b = buildReceipt(rt, { keyPair: kp });
-      const v = verifyReceipt(b.receipt, rt.artifactPath, { trustedIssuer: kp.publicKey });
+      const b = buildReceipt(rt, { keyPair: kp, agentKeyPair });
+      const v = verifyReceipt(b.receipt, rt.artifactPath, { trustedIssuer: kp.publicKey, trustedAgent: agentKeyPair.publicKey });
       return { receipt: b.receipt, verify: v };
     });
     const html = renderProfile(entries);
     expect(html).toContain("Verified Track Record");
     expect(html).toContain("Agent @aegis-swe"); // the AGENT is the subject
     expect(html).toContain("operated by @psyto"); // human operator = metadata
+    expect(html).toContain("Key-bound"); // one signing key across all entries
     expect(html).toContain("Experience"); // résumé section
     expect(html).toContain("証明された修正");
-    expect(html).toContain("独立に検証済み"); // per-entry verified line
+    // every entry authored by the one agent key
+    expect(entries.every((e) => e.verify.agentSignatureValid && e.verify.ok)).toBe(true);
     // three swe fixes, all verified, zero regressions in the roll-up
     expect(entries.every((e) => e.verify.ok)).toBe(true);
     // no secret leaks into the aggregated page

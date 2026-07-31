@@ -9,7 +9,10 @@ import { sha256hex, randomSalt, signMessage, generateVerifierKey, type KeyPair }
 export { PrivacyGateError } from "../publish-guard.js";
 
 export interface BuildOptions {
+  /** The independent verifier's keypair (signs the recomputed facts). */
   keyPair?: KeyPair;
+  /** The agent's identity keypair (signs authorship). Same key across an agent's jobs. */
+  agentKeyPair?: KeyPair;
   /** Injectable for deterministic tests. */
   salt?: string;
   issuedAt?: string;
@@ -21,11 +24,13 @@ export interface BuildResult {
   /** Kept device-local (not in the receipt). Reveal with a claim for selective disclosure. */
   salt: string;
   keyPair: KeyPair;
+  agentKeyPair: KeyPair;
   findings: Finding[];
 }
 
 export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResult {
   const keyPair = opts.keyPair ?? generateVerifierKey();
+  const agentKeyPair = opts.agentKeyPair ?? generateVerifierKey();
   const salt = opts.salt ?? randomSalt();
   const issuedAt = opts.issuedAt ?? new Date().toISOString();
   assertIssuedAt(issuedAt);
@@ -39,6 +44,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
   const subject = {
     kind: "agent" as const,
     agentId: label(raw.agent ?? "unknown", "agent"),
+    agentKey: agentKeyPair.publicKey,
     ...(raw.operator ? { operator: label(raw.operator, "operator") } : {}),
   };
 
@@ -64,7 +70,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
   const coreClaims = { conditions, toolsUsed, execution: { revisions, costBand, durationBand }, artifact, machineRecomputed: artifact.checks, clientAttested };
   const saltCommitment = sha256hex(salt + canonicalize(coreClaims));
 
-  const unsigned: Omit<Receipt, "signature"> = {
+  const unsigned: Omit<Receipt, "signature" | "agentSignature"> = {
     schema: "ccap.receipt/v0",
     subject,
     capsule,
@@ -81,8 +87,13 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
     issuedBy: { verifierPublicKey: keyPair.publicKey },
   };
 
+  // 1) The independent verifier signs the recomputed facts.
   const signature = signMessage(canonicalize(unsigned), keyPair.privateKey);
-  const receipt: Receipt = { ...unsigned, signature };
+  const withVerifier = { ...unsigned, signature };
+  // 2) The agent signs the whole verified receipt — attesting authorship, so no
+  //    one can graft this credential onto the agent's identity without its key.
+  const agentSignature = signMessage(canonicalize(withVerifier), agentKeyPair.privateKey);
+  const receipt: Receipt = { ...withVerifier, agentSignature };
 
   // Fail closed: if anything secret still shows up anywhere in the receipt,
   // refuse to return it. Callers must never write an unbuilt receipt.
@@ -91,7 +102,7 @@ export function buildReceipt(raw: RawTrace, opts: BuildOptions = {}): BuildResul
     throw new PrivacyGateError(dedupe(residual.map((r) => r.type)));
   }
 
-  return { receipt, salt, keyPair, findings };
+  return { receipt, salt, keyPair, agentKeyPair, findings };
 }
 
 function redactAttested(m: AttestedMetric): AttestedMetric & { source: "client-attested"; trust: "low" } {
