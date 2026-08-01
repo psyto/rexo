@@ -1,7 +1,7 @@
 > **⚠ 設計の記録(2026-07 時点)。現行の全体像は [`07-current-state.md`](07-current-state.md) と [`../README.md`](../README.md) を参照。**
 > このドキュメント以降、主語は「人の実績」→「AI エージェントの検証済み職歴」に、ビーコンヘッドは Web 制作 → AI-SWE / コントラクト修正に、プロダクトは単一 → クロスVM 再実行バリデータ(ERC-8004 + Solana Agent Registry Validation、devnet ライブ)へ発展しています。
 
-# Context Capital — Credential-Layer MVP (背骨の差し替え)
+# Rexo — Credential-Layer MVP (背骨の差し替え)
 
 **Version:** 0.2
 **Status:** Supersedes the Pillar-1 (marketplace) framing in v0.1
@@ -78,7 +78,7 @@ Capsule / Agent が特定条件下で再現した、独立再計算メトリク�
 | 選択的開示（特定クレームのみ検証） | disclosure primitive |
 | 検証者署名・第三者再現 | verifier signature |
 
-Context Capital 側が新規に書くのは:（a）Web 制作評価器のアダプタ、（b）Receipt / Capability Score のスキーマと表示面、（c）Maker の redact・承認 UI。**検証の核は既存エンジン。**
+Rexo 側が新規に書くのは:（a）Web 制作評価器のアダプタ、（b）Receipt / Capability Score のスキーマと表示面、（c）Maker の redact・承認 UI。**検証の核は既存エンジン。**
 
 ## 5. チェーンの役割（縮小）
 

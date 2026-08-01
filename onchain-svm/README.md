@@ -1,4 +1,4 @@
-# Context Capital — SVM (Solana) re-execution validator (PoC)
+# Rexo — SVM (Solana) re-execution validator (PoC)
 
 The **Solana arm** of the cross-VM re-execution validator. Together with
 `../onchain` (the EVM / ERC-8004 arm) this is a position nobody occupies:

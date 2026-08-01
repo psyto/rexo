@@ -1,4 +1,4 @@
-# Context Capital — AI Development Guide
+# Rexo — AI Development Guide
 
 この文書は、生成 AI を実装パートナーとして使うための開発規約と最初のプロンプトである。AI に一度に全体を実装させない。縦に細い一機能を、仕様・テスト・実装・レビューの順に完了させる。
 
@@ -24,7 +24,7 @@
 ## 3. Master prompt for the coding agent
 
 ```text
-You are the implementation agent for Context Capital.
+You are the implementation agent for Rexo.
 
 Read docs/01-product-requirements.md and docs/02-technical-requirements.md before changing code.
 

@@ -1,4 +1,4 @@
-# Context Capital — MVP Implementation Plan
+# Rexo — MVP Implementation Plan
 
 ## Phase 0: Validate the asset (1–2 weeks)
 

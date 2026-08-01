@@ -1,4 +1,4 @@
-# Context Capital — Technical Requirements
+# Rexo — Technical Requirements
 
 ## 1. Design principles
 

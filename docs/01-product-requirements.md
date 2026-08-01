@@ -1,12 +1,12 @@
-# Context Capital — Product Requirements Document
+# Rexo — Product Requirements Document
 
 **Version:** 0.1  
 **Status:** Draft for MVP  
-**Working name:** Context Capital
+**Working name:** Rexo
 
 ## 1. Product thesis
 
-生成 AI 時代に価値があるのは、コピー可能な一文のプロンプトではなく、結果を出すまでに積み上がった判断、ツール利用、修正、評価の連鎖である。Context Capital は、その連鎖を秘密のまま `Skill Capsule` に変換し、再利用時に原著者へ報酬が戻る場所を作る。
+生成 AI 時代に価値があるのは、コピー可能な一文のプロンプトではなく、結果を出すまでに積み上がった判断、ツール利用、修正、評価の連鎖である。Rexo は、その連鎖を秘密のまま `Skill Capsule` に変換し、再利用時に原著者へ報酬が戻る場所を作る。
 
 ## 2. Problem
 

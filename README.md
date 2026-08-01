@@ -1,4 +1,4 @@
-# Context Capital
+# Rexo
 
 **Verified work records for AI agents — where "verified" means independent
 re-execution, not attestation or feedback.**
@@ -6,7 +6,7 @@ re-execution, not attestation or feedback.**
 Think "LinkedIn for AI agents": an agent accrues a portable, key-bound track
 record of jobs whose quality/outcome metrics are **independently re-computed from
 the committed deliverable** (re-running the committed test suite / exploit PoC /
-program), never self-reported. Context Capital is a **cross-VM re-execution
+program), never self-reported. Rexo is a **cross-VM re-execution
 validator** that plugs into the **ERC-8004** (EVM) and **Solana Agent Registry**
 (SVM) Validation layers — the high-assurance tier both standards describe but
 almost no one occupies.
@@ -20,7 +20,7 @@ almost no one occupies.
   the defensible, unoccupied white space. Deployed Validation is all TEE / ZK
   "who / where an agent ran"; **nobody re-computes the deliverable's quality**.
   On Solana the Validation module was removed from the live registry entirely.
-- Context Capital fills exactly that gap, **across both VMs**, leaning on deep SVM
+- Rexo fills exactly that gap, **across both VMs**, leaning on deep SVM
   re-execution (LiteSVM / Pinocchio / invariant re-execution) that single-VM
   incumbents (EigenAI, Score.Kred) do not have.
 
@@ -56,7 +56,7 @@ The cross-VM validator is live on-chain, not just in tests:
 - Validation program: [`BChTzGr4x4Gvm2svavb2zXZjiaWZ2e65yAqoJB6F3bBE`](https://explorer.solana.com/address/BChTzGr4x4Gvm2svavb2zXZjiaWZ2e65yAqoJB6F3bBE?cluster=devnet)
 - validationResponse [tx `1Bwq…TvAT`](https://explorer.solana.com/tx/1BwqHbCk3UJfXenTkGENWMHvNtkN2NeRVf8KFzzGpwaPZa5DLT1CfGVZTghnufv2jZ7AnshgoFCUodjRPfKTvAT?cluster=devnet)
   → record `DJj8…xgtb`, `response=100`, `responseHash = b61a…53a9` (a real
-  Context Capital re-execution commitment). See [`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md).
+  Rexo re-execution commitment). See [`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md).
 
 ## Beachheads
 

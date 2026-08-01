@@ -1,6 +1,6 @@
 # Live deployment — Solana devnet
 
-Context Capital's SVM re-execution validator, live on Solana **devnet** (2026-08-01).
+Rexo's SVM re-execution validator, live on Solana **devnet** (2026-08-01).
 Real, third-party-verifiable evidence that the cross-VM re-execution validator
 exists on-chain — not just in tests.
 

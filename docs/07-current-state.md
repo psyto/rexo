@@ -1,4 +1,4 @@
-# Context Capital — current state & architecture
+# Rexo — current state & architecture
 
 **Status:** private, research / PoC. Live on Solana devnet. Demand unproven (by design — see §6).
 **This doc supersedes the framing in `00`–`04`**, which are kept as the design record.
@@ -40,7 +40,7 @@ credential" for AI-assisted **web production** (docs 00–04). Two findings move
 **EVM arm (`onchain/`, Foundry).** A minimal faithful ERC-8004 Identity +
 Validation registry. The validator posts `validationResponse(requestHash,
 response, responseURI, responseHash, tag)`; the on-chain `responseHash` is a real
-Context Capital receipt commitment. Flagship: contract remediation (exploit PoC
+Rexo receipt commitment. Flagship: contract remediation (exploit PoC
 now fails + invariants hold).
 
 **SVM arm (`onchain-svm/`, Rust/LiteSVM/Pinocchio).**
