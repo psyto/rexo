@@ -139,3 +139,14 @@ describe("recompute swe — held-out correctness signal", () => {
     expect(check("correctness_tier", r.checks)).toBe("committed-only");
   });
 });
+
+describe("recompute swe — real reckn R1 held-out credential", () => {
+  it("is held-out-verified: committed + independent spec-based held-out both pass", () => {
+    const r = recompute("swe", "fixtures/reckn-r1-heldout");
+    expect(check("target_test_passes", r.checks)).toBe(true);
+    expect(check("tests_passed", r.checks)).toBe(4);
+    expect(check("heldout_present", r.checks)).toBe(true);
+    expect(check("heldout_all_pass", r.checks)).toBe(true);
+    expect(check("correctness_tier", r.checks)).toBe("held-out-verified");
+  });
+});

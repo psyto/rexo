@@ -1,0 +1,10 @@
+{
+  "target": "honest delivery reproduces under real base_fee/nonce",
+  "baseline": {
+    "honest delivery reproduces under real base_fee/nonce": false,
+    "honest delivery reproduces under zero base_fee/nonce": true,
+    "invariant: balance still enforced (overspend fails)": true,
+    "invariant: false claim fails (predicate mismatch)": true
+  },
+  "heldout": { "author": "task-issuer (spec-derived, independent of the deliverable)", "withheld": true }
+}
