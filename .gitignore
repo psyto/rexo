@@ -14,3 +14,4 @@ vault/
 # a maker's real filled-in job + delivered artifact may contain client secrets
 fixtures/your-job.json
 fixtures/your-artifact/
+onchain-svm/program/target/

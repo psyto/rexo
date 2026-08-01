@@ -1,0 +1,14 @@
+[package]
+name = "cc-svm-validation-program"
+version = "0.0.1"
+edition = "2021"
+description = "Context Capital — minimal Solana (Pinocchio) Validation record program: the on-chain surface where a re-execution validator records a validationResponse (Solana arm mirror of the EVM ValidationRegistry)."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+pinocchio = "0.9.3"

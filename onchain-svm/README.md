@@ -22,15 +22,26 @@ Uses the same LiteSVM / solana-v3 stack as the reckn `reexec-svm` backend. The
 production path swaps in `reexec-svm::replay` (bank-hash-authenticated snapshots,
 VM-neutral `ReplayRecordV1`) for full committed-state authenticity.
 
+## On-chain program
+
+`program/` is a real Solana program (Pinocchio, BPF-compiled) — the on-chain
+surface where the validator **records the validationResponse**: `{validator,
+agent_id, response (0–100), response_hash, tag, slot}`, write-once and
+validator-signed. It is the Solana mirror of the EVM `ValidationRegistry.sol`.
+
 ## Run
 
 ```
-cd onchain-svm && cargo test
+cd onchain-svm
+cargo test                                   # 4 re-execution tests
+(cd program && cargo build-sbf)              # compile the Solana program → .so
+cargo test --test onchain                    # 1 on-chain test (LiteSVM loads the .so)
 ```
 
-4 tests: an honest delivery reproduces; a false claim fails; an overspend is
-rejected by the runtime (balance is prestate truth); the commitment is
-deterministic (a third party recomputes the same responseHash).
+- Re-execution (4): honest reproduces; false claim fails; overspend rejected by
+  the runtime (balance is prestate truth); commitment deterministic.
+- On-chain (1): the validator records the **real `recompute_svm` commitment** as
+  the on-chain `responseHash` in the BPF program, read back and verified.
 
 ## Cross-VM position
 
