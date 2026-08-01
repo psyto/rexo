@@ -55,10 +55,19 @@ export function recomputeWeb(artifactPath: string): ArtifactCommitment {
 interface BundleMeta {
   target: string;
   baseline?: Record<string, boolean>;
+  /** Provenance of the independent held-out suite (labels only). */
+  heldout?: { author?: string; withheld?: boolean };
 }
 interface RunResult {
   results: Array<{ name: string; pass: boolean; error?: string }>;
   fatal?: string;
+}
+
+function runSuite(runnerPath: string, testsPath: string): RunResult {
+  const raw = execFileSync("node", [runnerPath, testsPath], { timeout: 10_000, encoding: "utf8" });
+  const parsed = JSON.parse(raw) as RunResult;
+  if (parsed.fatal) throw new Error(`swe suite failed to load: ${parsed.fatal}`);
+  return parsed;
 }
 
 export function recomputeSwe(bundlePath: string): ArtifactCommitment {
@@ -69,7 +78,7 @@ export function recomputeSwe(bundlePath: string): ArtifactCommitment {
     if (!existsSync(p)) throw new Error(`swe bundle missing ${p}`);
   }
   // Commitment binds every file in the bundle (name + bytes), sorted for
-  // determinism — so multi-file deliverables are covered, not just one file.
+  // determinism — so multi-file deliverables (incl. heldout.mjs) are covered.
   const NUL = Buffer.from([0]);
   const names = readdirSync(dir)
     .filter((n) => statSync(resolve(dir, n)).isFile())
@@ -82,11 +91,9 @@ export function recomputeSwe(bundlePath: string): ArtifactCommitment {
   const meta = JSON.parse(readFileSync(metaPath).toString("utf8")) as BundleMeta;
 
   const runnerPath = resolve(dirname(fileURLToPath(import.meta.url)), "swe-runner.mjs");
-  const raw = execFileSync("node", [runnerPath, testsPath], { timeout: 10_000, encoding: "utf8" });
-  const parsed = JSON.parse(raw) as RunResult;
-  if (parsed.fatal) throw new Error(`swe suite failed to load: ${parsed.fatal}`);
-  const results = parsed.results;
 
+  // 1) the agent's OWN committed suite
+  const results = runSuite(runnerPath, testsPath).results;
   const total = results.length;
   const passed = results.filter((r) => r.pass).length;
   const target = results.find((r) => r.name === meta.target);
@@ -99,12 +106,45 @@ export function recomputeSwe(bundlePath: string): ArtifactCommitment {
     metric("pass_rate", total ? round(passed / total, 3) : 0, "passing / total on re-execution", "ratio"),
     metric("regressions", regressions, "tests passing in committed baseline that now fail"),
   ];
+
+  // 2) the INDEPENDENT held-out suite (not authored by the agent) — the correctness
+  //    signal beyond "the agent passed its own tests." ~28% of tests-passing patches
+  //    are actually wrong (UTBoost); held-out tests catch those.
+  const heldoutPath = resolve(dir, "heldout.mjs");
+  const heldoutPresent = existsSync(heldoutPath);
+  if (heldoutPresent) {
+    const hr = runSuite(runnerPath, heldoutPath).results;
+    const hPassed = hr.filter((r) => r.pass).length;
+    const hAll = hr.length > 0 && hPassed === hr.length;
+    const author = meta.heldout?.author ?? "independent";
+    checks.push(
+      metric("heldout_present", true, "an independent held-out suite is committed"),
+      metric("heldout_tests_passed", hPassed, `held-out tests passing (author: ${author})`),
+      metric("heldout_tests_failed", hr.length - hPassed, "independent held-out tests failing"),
+      metric("heldout_all_pass", hAll, "all independent held-out tests pass"),
+      metric(
+        "correctness_tier",
+        hAll ? "held-out-verified" : "held-out-FAILED",
+        "strong = passed independent held-out tests; FAILED = passed own tests but not held-out",
+      ),
+    );
+  } else {
+    checks.push(
+      metric("heldout_present", false, "no independent held-out suite — self-graded only"),
+      metric(
+        "correctness_tier",
+        "committed-only",
+        "weak: only the agent's own committed tests were re-run; not independently held-out",
+      ),
+    );
+  }
+
   return { kind: "swe", commitment, checks };
 }
 
 // ---------------------------------------------------------------------------
 
-function metric(name: string, value: number | boolean, method: string, unit?: string): MachineMetric {
+function metric(name: string, value: number | boolean | string, method: string, unit?: string): MachineMetric {
   return { name, value, source: "recomputed", method, ...(unit ? { unit } : {}) };
 }
 function countMatches(s: string, re: RegExp): number {

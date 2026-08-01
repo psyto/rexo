@@ -111,3 +111,31 @@ describe("recompute swe — real example: reckn R1 fix", () => {
     expect(check("regressions", r.checks)).toBe(0);
   });
 });
+
+describe("recompute swe — held-out correctness signal", () => {
+  it("held-out-verified: passes the agent's own tests AND the independent held-out suite", () => {
+    const r = recompute("swe", "fixtures/swe-heldout-verified");
+    expect(check("target_test_passes", r.checks)).toBe(true);
+    expect(check("heldout_present", r.checks)).toBe(true);
+    expect(check("heldout_all_pass", r.checks)).toBe(true);
+    expect(check("correctness_tier", r.checks)).toBe("held-out-verified");
+  });
+
+  it("catches the ~28%: passes its OWN tests but the held-out suite fails it", () => {
+    const r = recompute("swe", "fixtures/swe-heldout-catch");
+    // the agent's own committed suite is green — self-graded looks fine
+    expect(check("target_test_passes", r.checks)).toBe(true);
+    expect(check("tests_failed", r.checks)).toBe(0);
+    // but the independent held-out suite catches the even-length bug
+    expect(check("heldout_present", r.checks)).toBe(true);
+    expect(check("heldout_all_pass", r.checks)).toBe(false);
+    expect(Number(check("heldout_tests_failed", r.checks))).toBeGreaterThanOrEqual(1);
+    expect(check("correctness_tier", r.checks)).toBe("held-out-FAILED");
+  });
+
+  it("committed-only tier when no held-out suite is supplied (self-graded, weak)", () => {
+    const r = recompute("swe", "fixtures/swe-bundle");
+    expect(check("heldout_present", r.checks)).toBe(false);
+    expect(check("correctness_tier", r.checks)).toBe("committed-only");
+  });
+});

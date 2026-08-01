@@ -101,6 +101,12 @@ const LABELS: Record<string, string> = {
   tests_failed: "失敗テスト",
   pass_rate: "通過率",
   regressions: "回帰",
+  // held-out correctness signal
+  heldout_present: "独立held-out有無",
+  heldout_tests_passed: "held-out通過",
+  heldout_tests_failed: "held-out失敗",
+  heldout_all_pass: "held-out全通過",
+  correctness_tier: "正しさ階層",
 };
 
 function fmtMetric(m: MachineMetric): { text: string; cls: string } {

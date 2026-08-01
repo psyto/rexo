@@ -1,0 +1,9 @@
+{
+  "target": "median of odd-length array",
+  "baseline": {
+    "median of odd-length array": false,
+    "median of single element": true,
+    "median unaffected by input order": true
+  },
+  "heldout": { "author": "task-issuer", "withheld": true }
+}
