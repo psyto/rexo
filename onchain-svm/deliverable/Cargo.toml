@@ -1,0 +1,14 @@
+[package]
+name = "cc-svm-vault-deliverable"
+version = "0.0.1"
+edition = "2021"
+description = "Demo agent deliverable: a minimal Solana (Pinocchio) vault whose withdraw enforces the collateral invariant. The re-execution validator re-runs it and checks invariants (solinv-style) — the SVM analog of the EVM contract-remediation flagship."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+pinocchio = "0.9.3"

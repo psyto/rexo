@@ -15,3 +15,4 @@ vault/
 fixtures/your-job.json
 fixtures/your-artifact/
 onchain-svm/program/target/
+onchain-svm/deliverable/target/

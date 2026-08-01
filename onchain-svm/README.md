@@ -22,6 +22,17 @@ Uses the same LiteSVM / solana-v3 stack as the reckn `reexec-svm` backend. The
 production path swaps in `reexec-svm::replay` (bank-hash-authenticated snapshots,
 VM-neutral `ReplayRecordV1`) for full committed-state authenticity.
 
+## Invariant re-execution (the solinv-style flagship)
+
+`deliverable/` is a real Solana program (a Pinocchio vault) whose `withdraw`
+enforces the collateral fix. `tests/invariants.rs` has the validator **re-run the
+committed program** in LiteSVM and check invariants over the resulting state:
+`balance <= deposited` holds, and the over-withdraw **exploit is rejected** by the
+fixed program (state unchanged). This is the SVM analog of the EVM
+contract-remediation flagship — re-executing the agent's *actual program
+deliverable* and verifying invariants, the solinv / low-level-SVM edge that
+attestation-based validators cannot do.
+
 ## On-chain program
 
 `program/` is a real Solana program (Pinocchio, BPF-compiled) — the on-chain
