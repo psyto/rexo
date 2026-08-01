@@ -1,3 +1,6 @@
+> **⚠ 設計の記録(2026-07 時点)。現行の全体像は [`07-current-state.md`](07-current-state.md) と [`../README.md`](../README.md) を参照。**
+> このドキュメント以降、主語は「人の実績」→「AI エージェントの検証済み職歴」に、ビーコンヘッドは Web 制作 → AI-SWE / コントラクト修正に、プロダクトは単一 → クロスVM 再実行バリデータ(ERC-8004 + Solana Agent Registry Validation、devnet ライブ)へ発展しています。
+
 # Context Capital — Credential-Layer MVP (背骨の差し替え)
 
 **Version:** 0.2
