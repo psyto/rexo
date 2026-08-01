@@ -1,0 +1,16 @@
+[package]
+name = "cc-svm-validator"
+version = "0.0.1"
+edition = "2021"
+description = "Context Capital — SVM (Solana) deliverable re-execution validator: deterministic LiteSVM replay of a committed transaction against a committed account snapshot, producing a verdict + commitment (the Solana arm of the cross-VM re-execution validator)."
+
+[dependencies]
+# Same LiteSVM/solana v3 stack the reckn reexec-svm backend uses.
+litesvm = { path = "../../reckn/reexec-svm/vendor/litesvm/crates/litesvm" }
+solana-account = "3"
+solana-pubkey = "3"
+solana-instruction = "3"
+solana-transaction = { version = "3", features = ["verify"] }
+solana-keypair = "3.1"
+solana-signer = "3"
+sha2 = "0.10"

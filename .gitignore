@@ -5,6 +5,8 @@ out/
 onchain/out/
 onchain/cache/
 onchain/broadcast/
+# rust (onchain-svm PoC)
+onchain-svm/target/
 .DS_Store
 # never commit device-local secrets / raw traces
 *.local.json
