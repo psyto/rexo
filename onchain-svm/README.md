@@ -40,6 +40,21 @@ surface where the validator **records the validationResponse**: `{validator,
 agent_id, response (0–100), response_hash, tag, slot}`, write-once and
 validator-signed. It is the Solana mirror of the EVM `ValidationRegistry.sol`.
 
+## Held-out correctness tier on-chain
+
+`scripts/tier.mjs` + `scripts/compute-tier.mjs` re-run a bundle's committed suite
+**and an independent held-out suite**, then map the resulting tier onto the record:
+
+| tier | meaning | response | tag |
+|---|---|---|---|
+| `held-out-verified` | passed committed + independent held-out | `100` | `held-out-verified` |
+| `committed-only` | passed its own tests only (self-graded, weak) | `70` | `committed-only` |
+| `held-out-FAILED` | passed its own tests but held-out caught it (the ~28%) | `0` | `held-out-FAILED` |
+
+`responseHash` is a reproducible sha256 over the exact re-execution facts, so the
+tier the chain records can be re-derived and checked. Live on devnet (a
+`held-out-verified` record with `response=100`) — see `DEPLOYMENTS.md`.
+
 ## Run
 
 ```

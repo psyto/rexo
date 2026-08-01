@@ -15,12 +15,14 @@ interface Vm {
 ///   forge script script/PostValidation.s.sol --rpc-url <TESTNET_RPC> \
 ///     --private-key <FUNDED_KEY> --broadcast
 ///
-/// The responseHash is the REAL reckn-R1 verified-receipt commitment.
+/// response/tag/responseHash carry the held-out CORRECTNESS TIER (held-out-verified
+/// here: reckn-R1 passes committed 4/4 + independent held-out 4/4). Regenerate with
+///   (cd ../onchain-svm && node scripts/compute-tier.mjs ../fixtures/reckn-r1-heldout)
 contract PostValidation {
     Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    bytes32 constant RESPONSE_HASH = 0xb61a40402fa247ff4b8890c9a8c0fff19afffe0e6f5380baa822d63a9ef753a9;
-    bytes32 constant TAG = bytes32("reexec");
+    bytes32 constant RESPONSE_HASH = 0x32d758f63d8f84b55b3c9835a52d17341860f288e82f9535c23c4be67711f220;
+    bytes32 constant TAG = bytes32("held-out-verified");
 
     function run() external {
         vm.startBroadcast();

@@ -9,10 +9,14 @@ interface Vm {
     function expectRevert(bytes4) external;
 }
 
-/// End-to-end: Context Capital acts as a re-execution validator on ERC-8004.
-/// The on-chain responseHash is the REAL reckn-R1 re-execution commitment from
-/// the Context Capital receipt (fixtures/reckn-r1-bundle) — regenerate with:
-///   npx tsx -e "import('./src/verify/recompute.js').then(m=>console.log(m.recompute('swe','fixtures/reckn-r1-bundle').commitment))"
+/// End-to-end: Rexo acts as a re-execution validator on ERC-8004, and carries the
+/// held-out CORRECTNESS TIER on-chain via the standard fields (not just pass/fail):
+///   response (0..100) = assurance the tier deserves, tag = tier label,
+///   responseHash = reproducible commitment to the re-execution facts.
+/// The tier is derived by re-running committed + INDEPENDENT held-out suites —
+/// regenerate the hashes/tags with:
+///   (cd ../onchain-svm && node scripts/compute-tier.mjs ../fixtures/reckn-r1-heldout)
+///   (cd ../onchain-svm && node scripts/compute-tier.mjs ../fixtures/swe-heldout-catch)
 contract ValidationFlowTest {
     Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
@@ -20,13 +24,18 @@ contract ValidationFlowTest {
     ValidationRegistry validation;
 
     address agentOwner = address(0xA0); // the human/org operating the agent
-    address validator = address(0xCC); // Context Capital, the re-execution validator
+    address validator = address(0xCC); // Rexo, the re-execution validator
     address stranger = address(0xBAD);
 
-    // The verified Receipt's re-execution commitment (reckn-R1, target test passes).
-    bytes32 constant RESPONSE_HASH = 0xb61a40402fa247ff4b8890c9a8c0fff19afffe0e6f5380baa822d63a9ef753a9;
+    // held-out-verified: reckn-R1 fix passes committed 4/4 AND an independent
+    // held-out suite 4/4 → response 100, tag "held-out-verified".
+    bytes32 constant RESPONSE_HASH = 0x32d758f63d8f84b55b3c9835a52d17341860f288e82f9535c23c4be67711f220;
+    bytes32 constant TAG = bytes32("held-out-verified");
+    // held-out-FAILED: a patch that passes its OWN tests (3/3) but the held-out
+    // suite catches it (0/2) → response 0, tag "held-out-FAILED" (the ~28% case).
+    bytes32 constant FAILED_HASH = 0xee80a0a3c889a142766cce5d4c7652ee35773ffe0a03d2740cc1803801902d2e;
+    bytes32 constant FAILED_TAG = bytes32("held-out-FAILED");
     bytes32 constant AGENT_KEY_HASH = keccak256("agent:aegis-swe");
-    bytes32 constant TAG = bytes32("reexec");
 
     function setUp() public {
         identity = new IdentityRegistry();
@@ -43,18 +52,37 @@ contract ValidationFlowTest {
         vm.prank(agentOwner);
         validation.validationRequest(validator, agentId, "ipfs://request", requestHash);
 
-        // 3. Context Capital re-executes off-chain and posts the recomputed result:
-        //    response = 100 (passed), responseHash = the verified Receipt's commitment
+        // 3. Rexo re-executes committed + held-out off-chain and posts the tier:
+        //    held-out-verified → response 100, tag "held-out-verified"
         vm.prank(validator);
         validation.validationResponse(requestHash, 100, "ipfs://receipt.json", RESPONSE_HASH, TAG);
 
-        // 4. anyone can read the on-chain status
+        // 4. anyone can read the tier on-chain
         (address v, uint256 aId, uint8 response, bytes32 rHash, bytes32 tag,) = validation.getValidationStatus(requestHash);
         require(v == validator, "validator mismatch");
         require(aId == agentId, "agentId mismatch");
-        require(response == 100, "expected passed");
-        require(rHash == RESPONSE_HASH, "responseHash must equal the receipt commitment");
-        require(tag == TAG, "tag mismatch");
+        require(response == 100, "held-out-verified must post 100");
+        require(rHash == RESPONSE_HASH, "responseHash must equal the tier commitment");
+        require(tag == TAG, "tag must be held-out-verified");
+    }
+
+    /// The honest half: a patch that passes its own tests but the independent
+    /// held-out suite catches is recorded as tier held-out-FAILED (response 0),
+    /// NOT a cosmetic 100 — the on-chain record can't launder a wrong deliverable.
+    function test_heldout_failed_records_zero_tier() public {
+        vm.prank(agentOwner);
+        uint256 agentId = identity.registerAgent(AGENT_KEY_HASH, "ipfs://agent-card");
+        bytes32 requestHash = keccak256("median-even-length-bug:job-request");
+        vm.prank(agentOwner);
+        validation.validationRequest(validator, agentId, "ipfs://request", requestHash);
+
+        vm.prank(validator);
+        validation.validationResponse(requestHash, 0, "ipfs://receipt.json", FAILED_HASH, FAILED_TAG);
+
+        (, , uint8 response, bytes32 rHash, bytes32 tag,) = validation.getValidationStatus(requestHash);
+        require(response == 0, "held-out-FAILED must post 0");
+        require(rHash == FAILED_HASH, "responseHash must equal the failed-tier commitment");
+        require(tag == FAILED_TAG, "tag must be held-out-FAILED");
     }
 
     function test_only_named_validator_can_respond() public {

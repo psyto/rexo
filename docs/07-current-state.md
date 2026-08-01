@@ -88,12 +88,21 @@ now fails + invariants hold).
 
 ## 4. What's live
 
-Solana devnet (2026-08-01) — see `onchain-svm/DEPLOYMENTS.md`:
+Solana devnet — see `onchain-svm/DEPLOYMENTS.md`:
 - Validation program `BChTzGr4x4Gvm2svavb2zXZjiaWZ2e65yAqoJB6F3bBE`
-- validationResponse tx `1Bwq…TvAT` → record `DJj8…xgtb` (`response=100`,
-  `responseHash=b61a…53a9`, a real re-execution commitment).
+- **The held-out correctness tier is carried on-chain** (2026-08-02):
+  validationResponse tx `3gbq…ti71` → record `Ebqs…8rsp`, `response=100`,
+  `tag="held-out-verified"`, `responseHash=32d758f6…711f220` — a **reproducible
+  commitment to the re-execution facts** (reckn-R1 passed committed 4/4 + an
+  independent held-out suite 4/4). Regenerate the fields with
+  `node onchain-svm/scripts/compute-tier.mjs fixtures/reckn-r1-heldout`.
+- The `response` field is the tier's assurance, not a cosmetic 100:
+  held-out-verified → 100, committed-only → 70, held-out-FAILED → 0. The EVM arm
+  proves the honest half in a test — a patch that passes its own tests but the
+  held-out catches records `response=0, tag="held-out-FAILED"`, never a 100.
 
-Tests: 57 (engine) + 3 (EVM Foundry) + 6 (SVM cargo), all green.
+Tests: 57 (engine) + 4 (EVM Foundry, incl. both tiers on-chain) + 6 (SVM cargo),
+all green.
 
 ## 5. Beachheads & buyers
 
