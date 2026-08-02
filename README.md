@@ -49,14 +49,26 @@ a verified résumé (`npm run profile`).
 | Flagship | contract remediation: exploit closed + invariants hold | vault fix: over-withdraw rejected, `balance ≤ deposited` |
 | On-chain | ERC-8004 `ValidationRegistry` — `validationResponse` | Pinocchio BPF Validation program — validation record |
 
-## Live on Solana devnet
+## Live on Solana devnet — the held-out tier is on-chain
 
-The cross-VM validator is live on-chain, not just in tests:
+The cross-VM validator is live on-chain, not just in tests, and it carries the
+**held-out correctness tier** (see below) in the standard ERC-8004 fields:
 
 - Validation program: [`BChTzGr4x4Gvm2svavb2zXZjiaWZ2e65yAqoJB6F3bBE`](https://explorer.solana.com/address/BChTzGr4x4Gvm2svavb2zXZjiaWZ2e65yAqoJB6F3bBE?cluster=devnet)
-- validationResponse [tx `1Bwq…TvAT`](https://explorer.solana.com/tx/1BwqHbCk3UJfXenTkGENWMHvNtkN2NeRVf8KFzzGpwaPZa5DLT1CfGVZTghnufv2jZ7AnshgoFCUodjRPfKTvAT?cluster=devnet)
-  → record `DJj8…xgtb`, `response=100`, `responseHash = b61a…53a9` (a real
-  Rexo re-execution commitment). See [`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md).
+- `held-out-verified` validationResponse [tx `3gbq…ti71`](https://explorer.solana.com/tx/3gbqrpxxHtCgxk2D6RJkkXaLEw5j9btiUgovP1yqDRBe1CCQm2HWGbisgSHNUCA6JB26tEs8NeAihCWmjJ22ti71?cluster=devnet)
+  → record [`Ebqs…8rsp`](https://explorer.solana.com/address/Ebqsseoy4oCx2DQopDujsjWREHXc6wjUhUPDApiJ8rsp?cluster=devnet), `response=100`, `tag="held-out-verified"`,
+  `responseHash = 32d758f6…711f220` — a **reproducible** commitment to the
+  re-execution facts (reckn-R1: committed 4/4 + independent held-out 4/4).
+  Regenerate with `node onchain-svm/scripts/compute-tier.mjs fixtures/reckn-r1-heldout`.
+  See [`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md).
+
+**Held-out correctness tier.** Re-running an agent's *own* committed tests is
+self-graded — an empirical study found ~28.4% of tests-passing patches are
+actually wrong (UTBoost, ACL 2025). So Rexo also runs an **independent held-out
+suite** (authored by the task issuer, unseen by the agent) and encodes the tier
+into `response` / `tag`: `held-out-verified` → 100, `committed-only` → 70,
+`held-out-FAILED` → 0. The EVM test proves the honest half on-chain — a
+wrong-but-passing patch records `response=0`, never a cosmetic 100.
 
 ## Beachheads
 
@@ -73,31 +85,62 @@ its value collapses to a generic Lighthouse checklist any linter reproduces.)
 
 - `src/` — the engine (TypeScript): trace + redaction, re-compute adapters
   (`web`, `swe`), receipt build/verify (two-signature, canonical wire), credential
-  + résumé render, CLI. **57 tests.**
+  + résumé render, CLI. **61 tests.**
 - `onchain/` — EVM ERC-8004 Validation PoC (Foundry): `ValidationRegistry.sol` +
-  3 tests + testnet broadcast script. → [README](onchain/README.md)
+  4 tests (both correctness tiers on-chain) + testnet broadcast script. → [README](onchain/README.md)
 - `onchain-svm/` — Solana re-execution validator: LiteSVM re-exec, a Pinocchio
   BPF Validation program, solinv-style invariant re-exec, devnet deploy. **6 tests.**
+  `scripts/` — `compute-tier.mjs` (derive the on-chain tier), `read-record.mjs`
+  (keyless read-back), `post-validation-devnet.mjs` (post a tier).
   → [README](onchain-svm/README.md) · [DEPLOYMENTS](onchain-svm/DEPLOYMENTS.md)
-- `fixtures/` — real & synthetic deliverables, including `reckn-r1-bundle` (a real
-  merged fix from `psyto/reckn`).
+- `fixtures/` — real & synthetic deliverables: `reckn-r1-bundle` / `reckn-r1-heldout`
+  (a real merged fix from `psyto/reckn`, + its independent held-out suite),
+  `swe-heldout-catch` (a wrong-but-passing patch the held-out catches).
 - `docs/` — current state + the design record.
 
-## Try it
+## Quickstart
+
+Clone and run the whole thing locally — no keys, no network needed (Node 20+).
 
 ```
-npm test                                             # engine (57)
-npm run build:receipt -- --fixture fixtures/raw-trace-swe.json   # → out/receipt.html
-npm run profile                                      # → out/profile.html (agent résumé)
-npm run onchain:test                                 # EVM ERC-8004 Validation
-cd onchain-svm && cargo test                         # SVM re-exec + invariants + on-chain
+git clone https://github.com/psyto/rexo && cd rexo
+npm install
+npm test                                                     # engine — 61 tests
+
+# 1. Build a publish-safe Receipt from a committed SWE deliverable, then verify it
+npm run build:receipt -- --fixture fixtures/raw-trace-swe.json   # → out/receipt.{json,html}
+npm run verify:receipt                                       # independent re-check → all PASS
+open out/receipt.html                                        # the credential (macOS; else your browser)
+
+# 2. Aggregate an agent's jobs into a key-bound résumé
+npm run profile                                              # → out/profile.html
+
+# 3. Derive the held-out correctness tier the chain records (re-runs both suites)
+node onchain-svm/scripts/compute-tier.mjs fixtures/reckn-r1-heldout   # → held-out-verified, response 100
+node onchain-svm/scripts/compute-tier.mjs fixtures/swe-heldout-catch  # → held-out-FAILED,   response 0
+
+# 4. On-chain arms
+npm run onchain:test                                         # EVM ERC-8004 Validation — 4 tests (both tiers on-chain)
+cd onchain-svm && cargo test                                 # SVM re-exec + invariants + on-chain record — 6 tests
+```
+
+Everything above is offline and deterministic. Broadcasting to a real network
+(Solana devnet / an EVM testnet) additionally needs a funded keypair — see
+[`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md). The live devnet record
+is already posted (above), so you can also just **read it back** without any keys:
+
+```
+# reads the on-chain record: owner = Validation program, response 100, tag "held-out-verified"
+node onchain-svm/scripts/read-record.mjs Ebqsseoy4oCx2DQopDujsjWREHXc6wjUhUPDApiJ8rsp
 ```
 
 ## Status & honest scope
 
-Private, research / PoC stage. The mechanism is real and **live on devnet**;
-**demand is unproven** — who requests and pays for on-chain deliverable validation
-is the open question. Building ahead of that demand is deliberate: the Validation
+Public, research / PoC stage. The mechanism is real, runs locally from a clone,
+and is **live on devnet** (the tier read-back above needs no keys). It is **not a
+hosted product** — there is no website to submit an agent's job to yet; a developer
+runs the engine themselves. **Demand is unproven** — who requests and pays for
+on-chain deliverable validation is the open question. Building ahead of that demand is deliberate: the Validation
 layer is empty now, and owning the cross-VM re-execution primitive before the
 agent wave is the timing bet. No investment, tokens, escrow, or lending.
 
