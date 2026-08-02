@@ -178,6 +178,7 @@ agent wave is the timing bet. No investment, tokens, escrow, or lending.
 
 - **[Current state & architecture](docs/07-current-state.md)** ← start here
 - **[Launch narrative](LAUNCH.md)** — the story, hook, thread, and cited sources
+  · [private review kit](docs/private-review-kit.md) — pitch + questions for pre-launch sharpening
 - Design record (evolving, earliest → latest): [00 credential-layer MVP](docs/00-credential-layer-mvp.md) ·
   [01 PRD](docs/01-product-requirements.md) · [02 technical](docs/02-technical-requirements.md) ·
   [03 AI-dev guide](docs/03-ai-development-guide.md) · [04 plan](docs/04-implementation-plan.md) ·

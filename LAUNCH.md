@@ -106,6 +106,12 @@ First 10 amplifiers (fill with handles) — ERC-8004 core & community, agent-inf
 builders, the x402 ecosystem, Solana agent-registry folks, a few AI-SWE / security
 researchers.
 
+## Before going public
+
+Sharpen with 3–5 trusted people first (the launch first impression is one-shot).
+Kit — 30-second pitch, the three questions to ask, how to read the signal, and a
+log template: [`docs/private-review-kit.md`](docs/private-review-kit.md).
+
 ## Sources
 
 Verified against primary sources before use. Keep this list honest — if a number
