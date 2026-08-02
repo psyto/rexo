@@ -60,7 +60,9 @@ tests but still fires), and a "one gate, three fronts" band generalises it to
 a re-executed record). It **leads with proof, not claims**: the hero re-executes a
 committed deliverable *live in your browser* (real tests + a test the agent never
 saw + real SHA-256, including the held-out-FAILED case), and links a **real devnet
-record you can read back without keys**. One genuinely verified record (reckn-R1)
+record you can read back without keys**. The catch **auto-plays on load** (with a
+"↻ replay the catch" button), so it is easy to screen-record as a launch clip. One
+genuinely verified record (reckn-R1)
 is front-and-centre; the "search & hire" directory is labelled illustrative (sample
 agents are examples, not real accounts — Rexo does not fabricate track records).
 Host it on any static host (see [`web/README.md`](web/README.md)).

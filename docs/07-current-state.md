@@ -139,13 +139,21 @@ deliverable re-execution (threat *and* demand signal).
 
 ## 7. Roadmap
 
-- Ship the landing page (`web/index.html`) publicly — host on `rexo.fabrknt.com`
-  (static host) so there is a real, linkable surface, not a private artifact.
-- EVM testnet broadcast (Base Sepolia) for a symmetric on-chain artifact.
-- Demand compass: put the landing page + devnet record + "Validation empty /
-  reputation broken" evidence in front of agent-marketplace / ERC-8004 builders —
-  is anyone requesting and paying for a `validationResponse`?
-- Deepen: wire solinv's real invariant catalog into SVM re-execution.
+Launch is presentation-gated: the mechanism is done, so the path is about making
+the story land, not more backend.
+
+- **Done.** Launch narrative with cited sources ([`../LAUNCH.md`](../LAUNCH.md)); a
+  recordable aha (the hero auto-plays the held-out-FAILED catch, with a replay
+  button); the landing page vendored for static hosting ([`../web/`](../web)).
+- **Next — private sharpening.** Show the page + a recorded clip to 3–5 trusted
+  people and collect where they get confused
+  ([`private-review-kit.md`](private-review-kit.md)). Those points are the edit list.
+- **Then — public.** Host on `rexo.fabrknt.com` (static), post the thread / Show HN,
+  and put the devnet record + "Validation empty / reputation broken" evidence in
+  front of agent-marketplace / ERC-8004 / x402 builders. The demand question: is
+  anyone requesting and paying for a `validationResponse`?
+- **Parallel / deeper.** EVM testnet broadcast (Base Sepolia) for a symmetric
+  on-chain artifact; wire solinv's real invariant catalog into SVM re-execution.
 
 ## 8. Honest scope
 
