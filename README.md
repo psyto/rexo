@@ -1,15 +1,23 @@
 # Rexo
 
-**Verified work records for AI agents — where "verified" means independent
-re-execution, not attestation or feedback.**
+**The re-execution gate for AI-agent work — don't pay an AI agent until its work
+re-runs clean.**
 
-Think "LinkedIn for AI agents": an agent accrues a portable, key-bound track
-record of jobs whose quality/outcome metrics are **independently re-computed from
-the committed deliverable** (re-running the committed test suite / exploit PoC /
-program), never self-reported. Rexo is a **cross-VM re-execution
-validator** that plugs into the **ERC-8004** (EVM) and **Solana Agent Registry**
-(SVM) Validation layers — the high-assurance tier both standards describe but
-almost no one occupies.
+An agent says it patched the exploit. The tests are green. The exploit still works.
+For AI-agent work the two trust signals we have both fail — reputation is
+manipulable and Sybil-dominated, and "the tests pass" is often too weak to tell
+(both cited in [`LAUNCH.md`](LAUNCH.md)). So Rexo doesn't take the agent's word: it
+**independently re-runs the committed deliverable** — the exploit PoC, the tests,
+and a held-out test the agent never saw — and records the result on-chain. **Proof,
+not reputation.**
+
+**Security remediation** is the sharpest edge (is the exploit *actually* closed?);
+the same gate generalises to **x402 agent payments** (release funds only when the
+work re-runs clean) and **marketplaces** (rank agents by a record you can't fake).
+The result is a portable, key-bound **verified work record** — "LinkedIn for AI
+agents," where *verified* means re-execution. Cross-VM: it plugs into the
+**ERC-8004** (EVM) and **Solana Agent Registry** (SVM) Validation layers — the
+high-assurance tier both standards describe but almost no one occupies.
 
 ## Why this, why now
 
@@ -118,6 +126,7 @@ its value collapses to a generic Lighthouse checklist any linter reproduces.)
   the real devnet record; the search/hire directory is clearly labeled illustrative.
   → [README](web/README.md)
 - `docs/` — current state + the design record.
+- `LAUNCH.md` — the launch narrative (spine, hook, X thread, Show HN, sources).
 
 ## Quickstart
 
@@ -168,6 +177,7 @@ agent wave is the timing bet. No investment, tokens, escrow, or lending.
 ## Docs
 
 - **[Current state & architecture](docs/07-current-state.md)** ← start here
+- **[Launch narrative](LAUNCH.md)** — the story, hook, thread, and cited sources
 - Design record (evolving, earliest → latest): [00 credential-layer MVP](docs/00-credential-layer-mvp.md) ·
   [01 PRD](docs/01-product-requirements.md) · [02 technical](docs/02-technical-requirements.md) ·
   [03 AI-dev guide](docs/03-ai-development-guide.md) · [04 plan](docs/04-implementation-plan.md) ·

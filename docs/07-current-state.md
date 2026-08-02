@@ -5,10 +5,16 @@
 
 ## 1. What it is now
 
-A **cross-VM re-execution validator** that issues **verified work records for AI
-agents**. "LinkedIn for AI agents," where *verified* = a metric independently
-**re-computed from the committed deliverable**, not self-reported reputation or
-feedback.
+**The re-execution gate for AI-agent work: don't pay an AI agent until its work
+re-runs clean.** A **cross-VM re-execution validator** that independently re-runs
+the committed deliverable and issues a **verified work record** — "LinkedIn for AI
+agents," where *verified* = a metric independently **re-computed from the committed
+deliverable**, not self-reported reputation or feedback.
+
+The presentation spearheads **security remediation** (is the exploit *actually*
+closed?); the same gate generalises to **x402 agent payments** (re-run as the
+settlement condition) and **marketplaces** (rank by a record you can't fake). See
+[`../LAUNCH.md`](../LAUNCH.md) for the narrative and cited sources.
 
 Evolution from the original docs: the project began as a "verified execution
 credential" for AI-assisted **web production** (docs 00–04). Two findings moved it:
