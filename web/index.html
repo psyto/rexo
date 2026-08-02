@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Verified work records for AI agents, where verified means independent re-execution of the committed deliverable — proof, not reputation. Cross-VM (ERC-8004 + Solana), live on devnet.">
-<meta property="og:title" content="Rexo — verified work records for AI agents">
-<meta property="og:description" content="Proof, not reputation. Independent re-execution of the committed deliverable, held-out-verified, recorded on-chain.">
+<meta name="description" content="The re-execution gate for AI-agent work: don't pay an AI agent until its work re-runs clean. Re-run the actual exploit/tests independently, recorded on-chain. Cross-VM (ERC-8004 + Solana).">
+<meta property="og:title" content="Rexo — don't pay an AI agent until its work re-runs clean">
+<meta property="og:description" content="The re-execution gate for agent work. Re-run the actual deliverable — security remediation, x402 payment, marketplace ranking. Proof, not reputation.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%94%81%3C/text%3E%3C/svg%3E">
 <title>Rexo — verified work records for AI agents, by re-execution</title>
 <style>
@@ -210,8 +210,8 @@ footer b{color:var(--ink)}
   <span class="brand"><span class="g">⟲</span> rexo</span>
   <span class="sp"></span>
   <nav>
+    <a href="#gate">The gate</a>
     <a href="#directory">Directory</a>
-    <a href="#why">Why</a>
     <a href="https://github.com/psyto/rexo" target="_blank" rel="noopener">Repo ↗</a>
     <a class="cta" href="#record">Verify on-chain ↓</a>
   </nav>
@@ -219,24 +219,25 @@ footer b{color:var(--ink)}
 
 <div class="wrap">
   <section class="hero">
-    <div class="eyebrow">verified work records for AI agents · proof, not reputation</div>
-    <h1>Hire the agent whose work you can re-run.</h1>
-    <p class="lede">Rexo gives an AI agent a portable, key-bound track record whose results are
-      <b>independently re-computed from the committed deliverable</b> — the tests, exploits and
-      programs re-run and recorded on-chain. Not stars. Not reviews. <b>Proof you can reproduce yourself.</b></p>
+    <div class="eyebrow">the re-execution gate for AI-agent work · pass before you pay</div>
+    <h1>Don't pay an AI agent until its work re-runs clean.</h1>
+    <p class="lede">An agent says it patched the exploit. The tests are green. <b>The exploit still works</b> —
+      and you're about to ship it. Rexo re-runs the <b>actual</b> deliverable — the exploit PoC, the tests,
+      and a test the agent never saw — and records the result on-chain. <b>Proof you can reproduce yourself,
+      not a star rating.</b></p>
     <div class="tchips">
-      <span class="tchip">re-execution, not attestation</span>
-      <span class="tchip"><b>held-out</b> catches the ~28% wrong-but-passing patches</span>
-      <span class="tchip">cross-VM · <b>ERC-8004</b> + Solana</span>
-      <span class="tchip">secret-free by construction</span>
+      <span class="tchip">pay only when it <b>re-runs clean</b></span>
+      <span class="tchip">re-runs the <b>actual exploit</b>, not a review</span>
+      <span class="tchip">catches work that <b>passes its own tests but is wrong</b></span>
+      <span class="tchip">cross-VM · live on <b>Solana</b> devnet</span>
     </div>
 
     <div class="proof">
       <div class="panel">
         <h3><span class="dot"></span> Re-execute a deliverable — right here</h3>
-        <div class="sub">Not a mockup. Pick a committed deliverable; Rexo runs its own tests
-          <b>and an independent held-out suite</b> live in your browser, computes a real SHA-256, and
-          returns the correctness tier.</div>
+        <div class="sub">Not a mockup. Pick a committed deliverable; Rexo re-runs its tests
+          <b>and a test the agent never saw</b> live in your browser, computes a real SHA-256, and returns
+          the tier that gates payment. Try <b>"Audit a patch (may fail)"</b> — watch it catch one that passes its own tests.</div>
         <div class="jobs" id="jobs"></div>
         <div class="run">
           <button id="run" type="button">Re-execute →</button>
@@ -261,6 +262,25 @@ footer b{color:var(--ink)}
           <a href="https://explorer.solana.com/address/Ebqsseoy4oCx2DQopDujsjWREHXc6wjUhUPDApiJ8rsp?cluster=devnet" target="_blank" rel="noopener">View the record ↗</a>
         </div>
       </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="sec" id="gate">
+    <h2>One gate, three places it pays off</h2>
+    <p class="intro">Re-execution is the same move everywhere money moves to an agent — <b>what</b> is delivered,
+      <b>when</b> it's paid, <b>where</b> it's aggregated. Security is the sharpest edge; the gate generalises.</p>
+    <div class="grid3">
+      <div class="tc"><div class="n">what · security</div><h3>Remediation that actually holds</h3>
+        <p>Re-run the real exploit PoC and invariants against the committed fix. If the exploit still fires,
+          it isn't done — you find out before it ships, not after the incident.</p></div>
+      <div class="tc"><div class="n">when · x402</div><h3>A condition on payment</h3>
+        <p>Agents pay agents with no human in the loop. Make "re-runs clean" the settlement condition —
+          release funds only when the deliverable actually reproduces.</p></div>
+      <div class="tc"><div class="n">where · marketplace</div><h3>Ranking you can't fake</h3>
+        <p>Thousands of jobs, no human review. Rank and route agents by a re-executed track record —
+          proof, not star ratings that forge for ~$0.005.</p></div>
     </div>
   </section>
 </div>
@@ -441,10 +461,10 @@ footer b{color:var(--ink)}
           '&nbsp;&nbsp;committed tests <span class="'+(cAll?'c-ok':'c-bad')+'">'+cPass+'/'+committed.length+' '+(cAll?'PASS':'FAIL')+'</span>',
           '<span class="c-mut">running independent held-out suite (unseen by the agent)…</span>',
           '&nbsp;&nbsp;held-out tests <span class="'+(hAll?'c-ok':'c-bad')+'">'+hPass+'/'+heldout.length+' '+(hAll?'PASS':'FAIL')+'</span>',
-          '&nbsp;&nbsp;correctness tier <span class="'+(hAll?'c-ok':'c-bad')+'">'+tier+'</span>'+(hAll?'':' <span class="c-mut">— passed its own tests but is wrong (the ~28%)</span>'),
+          '&nbsp;&nbsp;correctness tier <span class="'+(hAll?'c-ok':'c-bad')+'">'+tier+'</span>'+(hAll?'':' <span class="c-mut">— passes its own tests, still wrong: you were about to ship this</span>'),
           '&nbsp;&nbsp;responseHash <span class="c-ok">'+hash.slice(0,12)+'…'+hash.slice(-8)+'</span> <span class="c-mut">(real SHA-256)</span>',
-          (hAll?'<span class="c-ok">would post response 100, tag "held-out-verified" on-chain</span>'
-               :'<span class="c-bad">would post response 0, tag "held-out-FAILED" — not laundered into a green score</span>')
+          (hAll?'<span class="c-ok">re-runs clean → payment gate opens (response 100, on-chain)</span>'
+               :'<span class="c-bad">payment gate BLOCKS it (response 0) — caught before you paid or shipped</span>')
         ], function(){ btn.disabled=false; btn.textContent="Re-execute again →"; });
       });
     };
