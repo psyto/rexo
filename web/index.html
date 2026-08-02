@@ -84,6 +84,8 @@ code,.mono{font-family:var(--mono)}
 .run button{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;
   padding:11px 16px;font:inherit;font-weight:750;cursor:pointer;font-size:14px}
 .run button:disabled{opacity:.6;cursor:default}
+.run .ghost{background:transparent;color:var(--accent);border:1px solid var(--line);font-weight:650}
+.run .ghost:hover{border-color:var(--accent)}
 .run .hint{font-size:12px;color:var(--mut)}
 .term{margin-top:14px;background:var(--code-bg);border-radius:11px;padding:14px;min-height:150px;
   font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--code-ink);overflow:auto}
@@ -241,9 +243,10 @@ footer b{color:var(--ink)}
         <div class="jobs" id="jobs"></div>
         <div class="run">
           <button id="run" type="button">Re-execute →</button>
-          <span class="hint">runs real JS · real crypto.subtle SHA-256</span>
+          <button id="replay" type="button" class="ghost">↻ replay the catch</button>
+          <span class="hint">real JS · real SHA-256 · plays once on load</span>
         </div>
-        <div class="term" id="term"><span class="l c-mut">pick a deliverable, then press Re-execute…</span></div>
+        <div class="term" id="term"><span class="l c-mut">re-executing a committed deliverable…</span></div>
       </div>
 
       <div class="panel" id="record">
@@ -421,7 +424,10 @@ footer b{color:var(--ink)}
       heldout:[ {name:"even-length averages", run:function(s){return s.median([1,2,3,4])===2.5;}}, {name:"two elements", run:function(s){return s.median([10,20])===15;}} ] }
   ];
   function runSuite(tests,sol){ return tests.map(function(t){ var p=false; try{ p=(t.run(sol)===true); }catch(e){ p=false; } return {name:t.name,pass:p}; }); }
-  function sha256hex(str){ return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function(buf){ var u=new Uint8Array(buf),o=""; for(var i=0;i<u.length;i++){o+=("0"+u[i].toString(16)).slice(-2);} return o; }); }
+  function sha256hex(str){
+    if(!(window.crypto && crypto.subtle && crypto.subtle.digest)) return Promise.resolve(null); // e.g. opened over file://
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function(buf){ var u=new Uint8Array(buf),o=""; for(var i=0;i<u.length;i++){o+=("0"+u[i].toString(16)).slice(-2);} return o; });
+  }
   function bundleSource(job){ return JSON.stringify({ src:job.src, solution:Object.keys(job.sol).map(function(k){return k+":"+job.sol[k].toString();}), committed:job.committed.map(function(t){return t.name;}), heldout:job.heldout.map(function(t){return t.name;}) }); }
 
   function play(term, lines, done){
@@ -435,39 +441,51 @@ footer b{color:var(--ink)}
     step();
   }
 
-  var sel=0;
+  var sel=2; // default to "Audit a patch (may fail)" — the catch is the aha
+  function selectJob(idx){
+    sel=idx;
+    var box=document.getElementById("jobs");
+    Array.prototype.forEach.call(box.children,function(x,i){ x.setAttribute("aria-pressed", i===idx?"true":"false"); });
+  }
   function renderJobs(){
     var box=document.getElementById("jobs"); box.innerHTML="";
     JOBS.forEach(function(j,idx){
-      var b=document.createElement("button"); b.type="button"; b.className="jbtn"; b.setAttribute("aria-pressed", idx===0?"true":"false");
+      var b=document.createElement("button"); b.type="button"; b.className="jbtn"; b.setAttribute("aria-pressed", idx===sel?"true":"false");
       b.innerHTML='<span class="ji">'+esc(j.ico)+'</span><span><span class="jt">'+esc(j.title)+'</span><small>'+esc(j.ctx)+'</small></span>';
-      b.onclick=function(){ Array.prototype.forEach.call(box.children,function(x){x.setAttribute("aria-pressed","false");}); b.setAttribute("aria-pressed","true"); sel=idx; };
+      b.onclick=function(){ selectJob(idx); };
       box.appendChild(b);
     });
-    sel=0;
+  }
+  var running=false;
+  function execute(idx){
+    if(running) return;
+    if(idx!=null) selectJob(idx);
+    var job=JOBS[sel==null?0:sel];
+    var btn=document.getElementById("run"), term=document.getElementById("term");
+    running=true; btn.disabled=true; btn.textContent="running…";
+    var committed=runSuite(job.committed, job.sol), heldout=runSuite(job.heldout, job.sol);
+    var cPass=committed.filter(function(r){return r.pass;}).length, cAll=cPass===committed.length;
+    var hPass=heldout.filter(function(r){return r.pass;}).length, hAll=heldout.length>0&&hPass===heldout.length;
+    var tier=hAll?"held-out-verified":"held-out-FAILED";
+    sha256hex(bundleSource(job)).then(function(hash){
+      var hashLine = hash
+        ? '&nbsp;&nbsp;responseHash <span class="c-ok">'+hash.slice(0,12)+'…'+hash.slice(-8)+'</span> <span class="c-mut">(real SHA-256)</span>'
+        : '&nbsp;&nbsp;responseHash <span class="c-mut">— open over https to compute (crypto.subtle)</span>';
+      play(term, [
+        '<span class="c-mut">re-executing committed deliverable ('+esc(job.src)+')…</span>',
+        '&nbsp;&nbsp;committed tests <span class="'+(cAll?'c-ok':'c-bad')+'">'+cPass+'/'+committed.length+' '+(cAll?'PASS':'FAIL')+'</span>',
+        '<span class="c-mut">running independent held-out suite (unseen by the agent)…</span>',
+        '&nbsp;&nbsp;held-out tests <span class="'+(hAll?'c-ok':'c-bad')+'">'+hPass+'/'+heldout.length+' '+(hAll?'PASS':'FAIL')+'</span>',
+        '&nbsp;&nbsp;correctness tier <span class="'+(hAll?'c-ok':'c-bad')+'">'+tier+'</span>'+(hAll?'':' <span class="c-mut">— passes its own tests, still wrong: you were about to ship this</span>'),
+        hashLine,
+        (hAll?'<span class="c-ok">re-runs clean → payment gate opens (response 100, on-chain)</span>'
+             :'<span class="c-bad">payment gate BLOCKS it (response 0) — caught before you paid or shipped</span>')
+      ], function(){ running=false; btn.disabled=false; btn.textContent="Re-execute again →"; });
+    });
   }
   function wireRunner(){
-    var btn=document.getElementById("run"), term=document.getElementById("term");
-    btn.onclick=function(){
-      var job=JOBS[sel==null?0:sel];
-      btn.disabled=true; btn.textContent="running…";
-      var committed=runSuite(job.committed, job.sol), heldout=runSuite(job.heldout, job.sol);
-      var cPass=committed.filter(function(r){return r.pass;}).length, cAll=cPass===committed.length;
-      var hPass=heldout.filter(function(r){return r.pass;}).length, hAll=heldout.length>0&&hPass===heldout.length;
-      var tier=hAll?"held-out-verified":"held-out-FAILED";
-      sha256hex(bundleSource(job)).then(function(hash){
-        play(term, [
-          '<span class="c-mut">re-executing committed deliverable ('+esc(job.src)+')…</span>',
-          '&nbsp;&nbsp;committed tests <span class="'+(cAll?'c-ok':'c-bad')+'">'+cPass+'/'+committed.length+' '+(cAll?'PASS':'FAIL')+'</span>',
-          '<span class="c-mut">running independent held-out suite (unseen by the agent)…</span>',
-          '&nbsp;&nbsp;held-out tests <span class="'+(hAll?'c-ok':'c-bad')+'">'+hPass+'/'+heldout.length+' '+(hAll?'PASS':'FAIL')+'</span>',
-          '&nbsp;&nbsp;correctness tier <span class="'+(hAll?'c-ok':'c-bad')+'">'+tier+'</span>'+(hAll?'':' <span class="c-mut">— passes its own tests, still wrong: you were about to ship this</span>'),
-          '&nbsp;&nbsp;responseHash <span class="c-ok">'+hash.slice(0,12)+'…'+hash.slice(-8)+'</span> <span class="c-mut">(real SHA-256)</span>',
-          (hAll?'<span class="c-ok">re-runs clean → payment gate opens (response 100, on-chain)</span>'
-               :'<span class="c-bad">payment gate BLOCKS it (response 0) — caught before you paid or shipped</span>')
-        ], function(){ btn.disabled=false; btn.textContent="Re-execute again →"; });
-      });
-    };
+    document.getElementById("run").onclick=function(){ execute(); };
+    document.getElementById("replay").onclick=function(){ execute(2); }; // always replays the catch
   }
 
   var AGENTS=[
@@ -561,6 +579,9 @@ footer b{color:var(--ink)}
   window.showList=function(){ document.getElementById("dir-detail").classList.add("hidden"); document.getElementById("dir-list").classList.remove("hidden"); document.getElementById("directory").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"}); };
 
   renderJobs(); wireRunner(); renderSugg();
+  // Auto-play the aha once on load: the "Audit a patch" deliverable passes its own
+  // tests but the held-out suite catches it — recordable without any interaction.
+  setTimeout(function(){ execute(2); }, 700);
 })();
 </script>
 </body>
