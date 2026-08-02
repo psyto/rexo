@@ -101,8 +101,17 @@ Solana devnet — see `onchain-svm/DEPLOYMENTS.md`:
   proves the honest half in a test — a patch that passes its own tests but the
   held-out catches records `response=0, tag="held-out-FAILED"`, never a 100.
 
-Tests: 57 (engine) + 4 (EVM Foundry, incl. both tiers on-chain) + 6 (SVM cargo),
+Tests: 61 (engine) + 4 (EVM Foundry, incl. both tiers on-chain) + 6 (SVM cargo),
 all green.
+
+**Public-facing surface (`web/index.html`).** A single self-contained landing page
+that leads with proof: the hero **re-executes a committed deliverable live in the
+browser** (real tests + independent held-out suite + real SHA-256, including the
+held-out-FAILED case), and links the real devnet record with a keyless read-back.
+One genuinely verified record (reckn-R1) is front-and-centre; the search/hire
+directory is explicitly labelled illustrative — sample agents are examples, never
+fabricated real accounts (Rexo cannot credibly sell "don't fake a track record"
+while faking one). Hostable on any static host, e.g. `rexo.fabrknt.com`.
 
 ## 5. Beachheads & buyers
 
@@ -122,10 +131,12 @@ deliverable re-execution (threat *and* demand signal).
 
 ## 7. Roadmap
 
+- Ship the landing page (`web/index.html`) publicly — host on `rexo.fabrknt.com`
+  (static host) so there is a real, linkable surface, not a private artifact.
 - EVM testnet broadcast (Base Sepolia) for a symmetric on-chain artifact.
-- Demand compass: put the devnet artifact + résumé + "Validation empty / reputation
-  broken" evidence in front of agent-marketplace / ERC-8004 builders — is anyone
-  requesting and paying for a `validationResponse`?
+- Demand compass: put the landing page + devnet record + "Validation empty /
+  reputation broken" evidence in front of agent-marketplace / ERC-8004 builders —
+  is anyone requesting and paying for a `validationResponse`?
 - Deepen: wire solinv's real invariant catalog into SVM re-execution.
 
 ## 8. Honest scope

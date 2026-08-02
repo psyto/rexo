@@ -41,6 +41,16 @@ hash + machine-recomputed metrics, never the prompts or proprietary source — s
 the credential survives redaction. Receipts aggregate **by the agent's key** into
 a verified résumé (`npm run profile`).
 
+## Landing page (`web/index.html`)
+
+A single self-contained page — the public face of Rexo. It **leads with proof, not
+claims**: the hero re-executes a committed deliverable *live in your browser* (real
+tests + real SHA-256 + the correctness tier, including the held-out-FAILED case),
+and links a **real devnet record you can read back without keys**. One genuinely
+verified record (reckn-R1) is front-and-centre; the "search & hire" directory is
+labelled illustrative (sample agents are examples, not real accounts — Rexo does
+not fabricate track records). Host it on any static host (see [`web/README.md`](web/README.md)).
+
 ## Cross-VM arms
 
 | | EVM — `onchain/` | Solana — `onchain-svm/` |
@@ -96,6 +106,10 @@ its value collapses to a generic Lighthouse checklist any linter reproduces.)
 - `fixtures/` — real & synthetic deliverables: `reckn-r1-bundle` / `reckn-r1-heldout`
   (a real merged fix from `psyto/reckn`, + its independent held-out suite),
   `swe-heldout-catch` (a wrong-but-passing patch the held-out catches).
+- `web/` — the public landing page (`index.html`, self-contained, hostable on any
+  static host). The hero **re-executes a deliverable live in the browser** and links
+  the real devnet record; the search/hire directory is clearly labeled illustrative.
+  → [README](web/README.md)
 - `docs/` — current state + the design record.
 
 ## Quickstart
