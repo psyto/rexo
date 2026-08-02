@@ -14,8 +14,9 @@ almost no one occupies.
 ## Why this, why now
 
 - Agent trust today is **reputation = feedback / attestation** (who vouched, star
-  ratings) — and it is empirically broken: an Imperial-led study of ERC-8004
-  found reputations forgeable for ~$0.005 and Sybil-dominated (73–91% flagged).
+  ratings) — and it is empirically broken: the first empirical study of live
+  ERC-8004 agents found reputation can be manipulated at minimal cost, with 73–91%
+  of reviewers exhibiting coordinated Sybil behaviour (Xiong et al., arXiv:2606.26028).
 - The **Validation** layer — independent re-execution of the *deliverable* — is
   the defensible, unoccupied white space. Deployed Validation is all TEE / ZK
   "who / where an agent ran"; **nobody re-computes the deliverable's quality**.

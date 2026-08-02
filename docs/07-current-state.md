@@ -78,8 +78,9 @@ now fails + invariants hold).
   Metaplex) mirrors the three registries — but the live port **removed the
   Validation module entirely** ("archived for future upgrade"). An even cleaner
   white space than EVM.
-- **Reputation is crowded and broken** (Imperial study: forgeable for ~$0.005,
-  Sybil-dominated) → the strongest case for proof-based re-execution.
+- **Reputation is crowded and broken** (Xiong et al., arXiv:2606.26028: ERC-8004
+  reputation manipulable at minimal cost, 73–91% of reviewers coordinated Sybils)
+  → the strongest case for proof-based re-execution.
 - **Differentiator:** independent **deliverable re-execution**, **cross-VM**,
   leaning on SVM depth incumbents lack. **Absorption risk:** re-execution could be
   commoditized as one input to a reputation score (Score.Kred already lists it),
