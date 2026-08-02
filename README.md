@@ -78,8 +78,9 @@ The cross-VM validator is live on-chain, not just in tests, and it carries the
   See [`onchain-svm/DEPLOYMENTS.md`](onchain-svm/DEPLOYMENTS.md).
 
 **Held-out correctness tier.** Re-running an agent's *own* committed tests is
-self-graded — an empirical study found ~28.4% of tests-passing patches are
-actually wrong (UTBoost, ACL 2025). So Rexo also runs an **independent held-out
+self-graded — SWE-Bench's own tests are often too weak to tell: a 2025 study found
+345 patches that passed the benchmark's tests without resolving the issue (UTBoost,
+arXiv:2506.09289). So Rexo also runs an **independent held-out
 suite** (authored by the task issuer, unseen by the agent) and encodes the tier
 into `response` / `tag`: `held-out-verified` → 100, `committed-only` → 70,
 `held-out-FAILED` → 0. The EVM test proves the honest half on-chain — a

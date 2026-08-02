@@ -1,8 +1,9 @@
 // Held-out correctness tier → on-chain ERC-8004 validationResponse fields.
 //
 // The tier is the durability signal (see docs/07 §2): re-running an agent's OWN
-// committed tests is self-graded and weak — an empirical study found ~28.4% of
-// tests-passing patches are actually wrong (UTBoost, ACL 2025). An INDEPENDENT
+// committed tests is self-graded and weak — SWE-Bench's own tests are often too
+// weak to tell: a 2025 study found 345 patches that passed but did not resolve the
+// issue (UTBoost, arXiv:2506.09289). An INDEPENDENT
 // held-out suite (authored by the task issuer, unseen by the agent) is what
 // separates "passed its own tests" from "actually correct".
 //
@@ -17,7 +18,7 @@ import { createHash } from "node:crypto";
 export const TIERS = {
   "held-out-verified": { response: 100, tag: "held-out-verified" }, // passed committed + independent held-out
   "committed-only":    { response: 70,  tag: "committed-only" },    // passed its own tests only (self-graded, weak)
-  "held-out-FAILED":   { response: 0,   tag: "held-out-FAILED" },   // passed its own tests but held-out caught it (the ~28%)
+  "held-out-FAILED":   { response: 0,   tag: "held-out-FAILED" },   // passed its own tests but held-out caught it (pass-but-wrong)
 };
 
 // Deterministic tier from the two suites' results.

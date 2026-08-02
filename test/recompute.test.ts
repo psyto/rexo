@@ -121,7 +121,7 @@ describe("recompute swe — held-out correctness signal", () => {
     expect(check("correctness_tier", r.checks)).toBe("held-out-verified");
   });
 
-  it("catches the ~28%: passes its OWN tests but the held-out suite fails it", () => {
+  it("catches pass-but-wrong: passes its OWN tests but the held-out suite fails it", () => {
     const r = recompute("swe", "fixtures/swe-heldout-catch");
     // the agent's own committed suite is green — self-graded looks fine
     expect(check("target_test_passes", r.checks)).toBe(true);

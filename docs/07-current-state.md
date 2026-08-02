@@ -31,16 +31,17 @@ credential" for AI-assisted **web production** (docs 00–04). Two findings move
 - **Re-compute adapters:** `web` (Lighthouse-style HTML checks) and `swe` (re-run
   the committed test suite / exploit PoC in an isolated process).
 - **Held-out correctness signal (the durability move).** Re-running the agent's
-  *own* committed tests is a weak, self-graded signal — an empirical study found
-  ~28.4% of tests-passing patches are actually wrong (UTBoost, ACL 2025). So the
+  *own* committed tests is a weak, self-graded signal — SWE-Bench's own tests are
+  often too weak to tell: a 2025 study found 345 patches that passed the benchmark's
+  tests without resolving the issue (UTBoost, arXiv:2506.09289). So the
   `swe` adapter also runs an optional **independent held-out suite** (`heldout.mjs`,
   authored by the task issuer, withheld from the agent) and emits a
   `correctness_tier`: `held-out-verified` (passed both), `held-out-FAILED` (passed
   its own tests but the held-out suite caught it), or `committed-only` (self-graded,
   weak). Rexo credentials "passed the committed deliverable's tests" — never
   "verified correct" — and the held-out tier is what makes the credential worth
-  more than a leaderboard number. See `fixtures/swe-heldout-catch` (the ~28% case
-  caught) and `fixtures/swe-heldout-verified`.
+  more than a leaderboard number. See `fixtures/swe-heldout-catch` (the
+  pass-but-wrong case caught) and `fixtures/swe-heldout-verified`.
 - **Receipt** carries a salt commitment and **two signatures**: the independent
   **verifier** attests the recomputed facts; the **agent's own key** attests
   authorship (anti-impersonation — a credential can't be grafted onto an agent's

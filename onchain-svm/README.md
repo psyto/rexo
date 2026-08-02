@@ -49,7 +49,7 @@ validator-signed. It is the Solana mirror of the EVM `ValidationRegistry.sol`.
 |---|---|---|---|
 | `held-out-verified` | passed committed + independent held-out | `100` | `held-out-verified` |
 | `committed-only` | passed its own tests only (self-graded, weak) | `70` | `committed-only` |
-| `held-out-FAILED` | passed its own tests but held-out caught it (the ~28%) | `0` | `held-out-FAILED` |
+| `held-out-FAILED` | passed its own tests but held-out caught it | `0` | `held-out-FAILED` |
 
 `responseHash` is a reproducible sha256 over the exact re-execution facts, so the
 tier the chain records can be re-derived and checked. Live on devnet (a

@@ -32,7 +32,7 @@ contract ValidationFlowTest {
     bytes32 constant RESPONSE_HASH = 0x32d758f63d8f84b55b3c9835a52d17341860f288e82f9535c23c4be67711f220;
     bytes32 constant TAG = bytes32("held-out-verified");
     // held-out-FAILED: a patch that passes its OWN tests (3/3) but the held-out
-    // suite catches it (0/2) → response 0, tag "held-out-FAILED" (the ~28% case).
+    // suite catches it (0/2) → response 0, tag "held-out-FAILED" (pass-but-wrong).
     bytes32 constant FAILED_HASH = 0xee80a0a3c889a142766cce5d4c7652ee35773ffe0a03d2740cc1803801902d2e;
     bytes32 constant FAILED_TAG = bytes32("held-out-FAILED");
     bytes32 constant AGENT_KEY_HASH = keccak256("agent:aegis-swe");

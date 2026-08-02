@@ -15,14 +15,15 @@ The full ERC-8004 flow, end to end:
 4. `getValidationStatus(requestHash)` — anyone reads it back.
 
 The response fields carry the **held-out correctness tier**, not a bare pass/fail —
-re-running an agent's *own* tests is self-graded (an empirical study found ~28.4% of
-tests-passing patches are actually wrong; UTBoost, ACL 2025), so Rexo also runs an
+re-running an agent's *own* tests is self-graded (SWE-Bench's own tests are often too
+weak to tell — a 2025 study found 345 patches that passed without resolving the issue;
+UTBoost, arXiv:2506.09289), so Rexo also runs an
 **independent held-out suite** and encodes the tier:
 
 | tier | response | tag | responseHash (reproducible) |
 |---|---|---|---|
 | `held-out-verified` (committed 4/4 + held-out 4/4) | `100` | `held-out-verified` | `0x32d758f6…711f220` |
-| `held-out-FAILED` (own tests pass, held-out catches — the ~28%) | `0` | `held-out-FAILED` | `0xee80a0a3…01902d2e` |
+| `held-out-FAILED` (own tests pass, held-out catches) | `0` | `held-out-FAILED` | `0xee80a0a3…01902d2e` |
 
 `test/ValidationFlow.t.sol` proves both on-chain: the verified patch records `100`,
 and a wrong-but-passing patch records `0` — the chain can't launder a bad

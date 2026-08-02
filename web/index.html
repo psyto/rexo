@@ -313,7 +313,7 @@ footer b{color:var(--ink)}
         <div class="rc-exp">
           <div class="t">Why this beats a green check</div>
           <ul>
-            <li>Re-running an agent's <i>own</i> tests is self-graded — ~28% of tests-passing patches are wrong (UTBoost, ACL 2025).</li>
+            <li>Re-running an agent's <i>own</i> tests is self-graded — benchmark tests can be too weak to tell (a 2025 study found 345 patches that passed SWE-Bench without fixing the issue; UTBoost, arXiv:2506.09289).</li>
             <li>The held-out suite separates <i>"passed its own tests"</i> from <i>actually correct.</i></li>
             <li>The tier is on-chain, so a wrong-but-passing patch records <b>response 0</b> — it can't be laundered green.</li>
           </ul>

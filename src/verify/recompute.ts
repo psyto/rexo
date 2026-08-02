@@ -108,8 +108,9 @@ export function recomputeSwe(bundlePath: string): ArtifactCommitment {
   ];
 
   // 2) the INDEPENDENT held-out suite (not authored by the agent) — the correctness
-  //    signal beyond "the agent passed its own tests." ~28% of tests-passing patches
-  //    are actually wrong (UTBoost); held-out tests catch those.
+  //    signal beyond "the agent passed its own tests." Benchmark tests can be too
+  //    weak to tell — a 2025 study found 345 patches that passed SWE-Bench's tests
+  //    without resolving the issue (UTBoost, arXiv:2506.09289); held-out tests catch those.
   const heldoutPath = resolve(dir, "heldout.mjs");
   const heldoutPresent = existsSync(heldoutPath);
   if (heldoutPresent) {
